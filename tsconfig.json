@@ -16,11 +16,15 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
-    // ✅ добавляем node types
-    "types": ["node"]
+    "types": ["node"],
+
+    // ✅ добавляем вот это:
+    "baseUrl": "./",
+    "paths": {
+      "@/*": ["src/*"]
+    }
   },
 
   "include": ["src", "api"],
-
   "exclude": ["node_modules"]
 }
