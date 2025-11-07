@@ -279,30 +279,41 @@ async function createCheckoutSession(payload: any): Promise<string> {
 }
 
 function openStripeInNewTab(createSession: () => Promise<string>) {
-  const win = window.open("", "_blank", "noopener,noreferrer");
+  // open a blank tab (no noopener) so we can set its location later
+  const win = window.open("", "_blank");
   if (!win) {
+    // fallback — navigate current tab
     createSession()
       .then((url) => (window.location.href = url))
       .catch((e) => alert(e.message || "Stripe error"));
     return;
   }
 
-  win.document.write("<p style='font:16px system-ui;margin:20px'>Redirecting to Stripe…</p>");
+  // try to show a small message in the new tab (best-effort)
+  try {
+    win.document.write("<p style=\'font:16px system-ui;margin:20px\'>Redirecting to Stripe…</p>");
+  } catch (err) {
+    // ignore
+  }
 
   createSession()
     .then((url) => {
       try {
+        // try navigating the new tab
         win.location.href = url;
+        try { win.opener = null; } catch (e) {}
       } catch (err) {
-        win.close();
-        alert("Could not open Stripe Checkout.");
+        // if not possible — close new tab and navigate current tab
+        try { win.close(); } catch (e) {}
+        window.location.href = url;
       }
     })
     .catch((e) => {
-      win.close();
+      try { win.close(); } catch (err) {}
       alert(e.message || "Stripe error");
     });
 }
+
 
 const handleDonateOnce = (amountCents: number) => {
   openStripeInNewTab(() =>
@@ -313,7 +324,7 @@ const handleDonateOnce = (amountCents: number) => {
   );
 };
 
-const handleDonateMonthly = (priceId: string = "price_LIVE_FROM_STRIPE") => {
+const handleDonateMonthly = (priceId: string = "price_1SQdWEBrWBoIIHjWnOeeyFNE") => {
   openStripeInNewTab(() =>
     createCheckoutSession({
       mode: "subscription",
@@ -702,7 +713,7 @@ const handleDonateMonthly = (priceId: string = "price_LIVE_FROM_STRIPE") => {
 
 {/* Ежемесячная подписка $20 (подставь свой price id) */}
 <button
-  onClick={() => openStripeInNewTab(() => createCheckoutSession({ mode: "subscription", price_id: "price_LIVE_FROM_STRIPE" }))}
+  onClick={() => openStripeInNewTab(() => createCheckoutSession({ mode: "subscription", price_id: "price_1SQdWEBrWBoIIHjWnOeeyFNE" }))}
   className="inline-block rounded-xl bg-[var(--brand)] text-white px-6 py-3 font-semibold shadow-md hover:bg-[var(--brand-dark)] transition"
   type="button"
 >

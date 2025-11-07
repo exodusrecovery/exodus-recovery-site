@@ -88,6 +88,8 @@ const ContactForm = () => {
 };
 export default function RehabWebsite() {
     // ------------------------- Stripe helpers (working implementation) -------------------------
+    const [oneTimeInput, setOneTimeInput] = useState("");
+    const [selectedPriceId, setSelectedPriceId] = useState("price_1SQdWEBrWBoIIHjWnOeeyFNE");
     async function createCheckoutSession(payload) {
         const res = await fetch("/api/create-checkout-session", {
             method: "POST",
@@ -107,46 +109,53 @@ export default function RehabWebsite() {
         const win = window.open("", "_blank", "noopener,noreferrer");
         if (!win) {
             createSession()
-                .then((url) => { window.location.href = url; })
-                .catch((e) => alert(e?.message || "Stripe error"));
+                .then((url) => (window.location.href = url))
+                .catch((e) => alert(e.message || "Stripe error"));
             return;
         }
-        try {
-            win.opener = null;
-        }
-        catch { }
-        try {
-            win.document.write("<!doctype html><html><head><meta charset='utf-8'><title>Redirecting…</title></head><body style='font-family:system-ui, -apple-system, Roboto, sans-serif; padding:24px;'><h2>Redirecting to secure payment...</h2><p>If you are not redirected automatically, please wait or close this tab and try again.</p></body></html>");
-        }
-        catch { }
+        win.document.write("<p style='font:16px system-ui;margin:20px'>Redirecting to Stripe…</p>");
         createSession()
             .then((url) => {
             try {
                 win.location.href = url;
             }
             catch (err) {
-                try {
-                    win.close();
-                }
-                catch { }
-                alert("Could not open Stripe Checkout in the new tab.");
+                win.close();
+                alert("Could not open Stripe Checkout.");
             }
         })
-            .catch((e) => { try {
+            .catch((e) => {
             win.close();
-        }
-        catch { } alert(e?.message || "Stripe error"); });
+            alert(e.message || "Stripe error");
+        });
     }
-    const handleDonateOnce = (amountCents) => {
+    const handleDonateOnce = () => {
+        const val = (oneTimeInput || "").toString().trim();
+        if (!val) {
+            alert("Please enter an amount for one-time donation.");
+            return;
+        }
+        const cleaned = val.replace(/\$/g, "");
+        const num = Number(cleaned);
+        if (!Number.isFinite(num) || num <= 0) {
+            alert("Enter a valid numeric amount.");
+            return;
+        }
+        const cents = Math.round(num * 100);
         openStripeInNewTab(() => createCheckoutSession({
             mode: "payment",
-            amount: amountCents,
+            amount: cents,
         }));
     };
-    const handleDonateMonthly = (priceId = "price_1SQdWEBrWBoIIHjWnOeeyFNE") => {
+    const handleDonateMonthly = (priceId) => {
+        const pid = priceId || selectedPriceId;
+        if (!pid) {
+            alert("No subscription price selected.");
+            return;
+        }
         openStripeInNewTab(() => createCheckoutSession({
             mode: "subscription",
-            price_id: priceId,
+            price_id: pid,
         }));
     };
     // ------------------------- end Stripe helpers ------------------------------------------------
