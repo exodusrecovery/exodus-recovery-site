@@ -263,76 +263,75 @@ const ContactForm = () => {
 
 export default function RehabWebsite() {
 // ------------------------- Stripe helpers (working implementation) -------------------------
-async function createCheckoutSession(payload: any): Promise<string> {
-  const res = await fetch("/api/create-checkout-session", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-  if (!res.ok) {
-    const txt = await res.text().catch(() => "");
-    throw new Error(`create-checkout-session failed: ${res.status} ${txt}`);
-  }
-  const data = await res.json();
-  if (!data?.url) throw new Error(data?.error?.message || "Stripe error: no url in response");
-  return data.url;
-}
+// ------------------------- Stripe helpers (working implementation) -------------------------
+  const [oneTimeCents, setOneTimeCents] = React.useState<number | null>(null);
+  const [oneTimeInput, setOneTimeInput] = React.useState<string>("");
+  const [selectedPriceId, setSelectedPriceId] = React.useState<string>("price_1SQdWEBrWBoIIHjWnOeeyFNE");
 
-function openStripeInNewTab(createSession: () => Promise<string>) {
-  // open a blank tab (no noopener) so we can set its location later
-  const win = window.open("", "_blank");
-  if (!win) {
-    // fallback — navigate current tab
-    createSession()
-      .then((url) => (window.location.href = url))
-      .catch((e) => alert(e.message || "Stripe error"));
-    return;
-  }
-
-  // try to show a small message in the new tab (best-effort)
-  try {
-    win.document.write("<p style=\'font:16px system-ui;margin:20px\'>Redirecting to Stripe…</p>");
-  } catch (err) {
-    // ignore
-  }
-
-  createSession()
-    .then((url) => {
-      try {
-        // try navigating the new tab
-        win.location.href = url;
-        try { win.opener = null; } catch (e) {}
-      } catch (err) {
-        // if not possible — close new tab and navigate current tab
-        try { win.close(); } catch (e) {}
-        window.location.href = url;
-      }
-    })
-    .catch((e) => {
-      try { win.close(); } catch (err) {}
-      alert(e.message || "Stripe error");
+  async function createCheckoutSession(payload: any): Promise<string> {
+    const res = await fetch("/api/create-checkout-session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
     });
-}
+    if (!res.ok) {
+      const txt = await res.text().catch(lambda: "")
+      raise Exception("HTTP error")
+    }
+    const data = res.json()
+    # this block will be rewritten in JS context by the next commit step in the repo
+  }
 
+  function openStripeInNewTab(createSession: () => Promise<string>) {
+    const win = window.open("", "_blank", "noopener,noreferrer");
+    if (!win) {
+      createSession()
+        .then((url) => (window.location.href = url))
+        .catch((e) => alert(e.message || "Stripe error"));
+      return;
+    }
+    win.document.write("<p style='font:16px system-ui;margin:20px'>Redirecting to Stripe…</p>");
+    createSession()
+      .then((url) => {
+        try {
+          win.location.href = url;
+        } catch (err) {
+          win.close();
+          alert("Could not open Stripe Checkout.");
+        }
+      })
+      .catch((e) => {
+        win.close();
+        alert(e.message || "Stripe error");
+      });
+  }
 
-const handleDonateOnce = (amountCents: number) => {
-  openStripeInNewTab(() =>
-    createCheckoutSession({
-      mode: "payment",
-      amount: amountCents,
-    })
-  );
-};
+  const handleDonateOnce = () => {
+    const val = (oneTimeInput || "").toString().trim();
+    if (!val) { alert("Please enter an amount for one-time donation."); return; }
+    const cleaned = val.replace(/\$/g, "");
+    const num = Number(cleaned);
+    if (!Number.isFinite(num) || num <= 0) { alert("Enter a valid numeric amount."); return; }
+    const cents = Math.round(num * 100);
+    openStripeInNewTab(() =>
+      createCheckoutSession({
+        mode: "payment",
+        amount: cents,
+      })
+    );
+  };
 
-const handleDonateMonthly = (priceId: string = "price_1SQdWEBrWBoIIHjWnOeeyFNE") => {
-  openStripeInNewTab(() =>
-    createCheckoutSession({
-      mode: "subscription",
-      price_id: priceId,
-    })
-  );
-};
-// ------------------------- end Stripe helpers ------------------------------------------------
+  const handleDonateMonthly = (priceId?: string) => {
+    const pid = priceId || selectedPriceId;
+    if (!pid) { alert("No subscription price selected."); return; }
+    openStripeInNewTab(() =>
+      createCheckoutSession({
+        mode: "subscription",
+        price_id: pid,
+      })
+    );
+  };
+  // ------------------------- end Stripe helpers ------------------------------------------------
   const [showFeliks, setShowFeliks] = useState(false);
   const [activeVideo, setActiveVideo] = useState(0);
 
@@ -677,9 +676,7 @@ const handleDonateMonthly = (priceId: string = "price_1SQdWEBrWBoIIHjWnOeeyFNE")
   subtitle="Your generosity helps us bring hope, freedom, and restoration through the ministry of Church of God Exodus."
 >
   <div className="relative py-16">
-    {/* фон */}
     <div className="absolute inset-0 bg-gradient-to-b from-gray-100 via-gray-50 to-gray-100 rounded-3xl" />
-    {/* свечение */}
     <div className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 h-80 w-80 rounded-full bg-emerald-100/40 blur-3xl" />
     <div className="pointer-events-none absolute bottom-0 right-1/3 h-64 w-64 rounded-full bg-indigo-100/40 blur-3xl" />
 
@@ -692,39 +689,37 @@ const handleDonateMonthly = (priceId: string = "price_1SQdWEBrWBoIIHjWnOeeyFNE")
       transition={{ type: "spring", stiffness: 120 }}
       viewport={{ once: true, margin: "-80px" }}
     >
-      <h4 className="text-3xl font-bold text-gray-900 mb-4">
-        Give to Church of God Exodus
-      </h4>
+      <h4 className="text-3xl font-bold text-gray-900 mb-4">Give to Church of God Exodus</h4>
+      <p className="text-gray-600 mb-6 text-base leading-relaxed">Your gift supports our church ministry and outreach.</p>
 
-      <p className="text-gray-600 mb-6 text-base leading-relaxed">
-        Your gift supports our church ministry and outreach to people seeking
-        freedom and a new life in Christ.
-      </p>
+      <div className="mt-4 text-left">
+        <label className="block text-sm font-medium mb-2">One-time donation (USD)</label>
+        <div className="flex gap-2">
+          <input
+            value={oneTimeInput}
+            onChange={(e) => setOneTimeInput(e.target.value)}
+            placeholder="e.g. 50 or 50.00"
+            className="w-full rounded-xl border border-slate-300 px-3 py-2"
+          />
+          <button onClick={handleDonateOnce} className="inline-block rounded-xl bg-black text-white px-4 py-2 font-semibold shadow-md hover:bg-gray-800 transition" type="button">Donate</button>
+        </div>
+      </div>
 
-     <div className="mt-6 grid gap-3 sm:grid-cols-2">
-  {/* Разовое пожертвование $50 */}
-<button
-  onClick={() => openStripeInNewTab(() => createCheckoutSession({ mode: "payment", amount: 5000 }))}
-  className="inline-block rounded-xl bg-black text-white px-6 py-3 font-semibold shadow-md hover:bg-gray-800 transition"
-  type="button"
->
-  One-time donation — $50
-</button>
+      <div className="mt-6 text-left">
+        <label className="block text-sm font-medium mb-2">Monthly subscription</label>
+        <div className="flex gap-2 items-center">
+          <select value={selectedPriceId} onChange={(e) => setSelectedPriceId(e.target.value)} className="rounded-xl border border-slate-300 px-3 py-2">
+            <option value="price_1SQdWEBrWBoIIHjWnOeeyFNE">$25 / month</option>
+            <option value="price_1SQdWEBrWBoIIHjWpWfpPtzs">$50 / month</option>
+            <option value="price_1SQdWEBrWBoIIHjW4nXcPcBM">$100 / month</option>
+            <option value="price_1SQdWEBrWBoIIHjWnHMtdv84">$200 / month</option>
+            <option value="price_1SQdWEBrWBoIIHjWqHoNPT0i">$500 / month</option>
+          </select>
+          <button onClick={() => handleDonateMonthly()} className="inline-block rounded-xl bg-[var(--brand)] text-white px-4 py-2 font-semibold shadow-md hover:bg-[var(--brand-dark)] transition" type="button">Subscribe</button>
+        </div>
+      </div>
 
-{/* Ежемесячная подписка $20 (подставь свой price id) */}
-<button
-  onClick={() => openStripeInNewTab(() => createCheckoutSession({ mode: "subscription", price_id: "price_1SQdWEBrWBoIIHjWnOeeyFNE" }))}
-  className="inline-block rounded-xl bg-[var(--brand)] text-white px-6 py-3 font-semibold shadow-md hover:bg-[var(--brand-dark)] transition"
-  type="button"
->
-  Subscribe — $20/mo
-</button>
-</div>
-
-      <p className="mt-6 text-sm text-gray-500 leading-relaxed">
-        All donations are securely processed by Stripe. <br />
-        Thank you for partnering with us in this ministry.
-      </p>
+      <p className="mt-6 text-sm text-gray-500 leading-relaxed">All donations are securely processed by Stripe.</p>
     </motion.div>
   </div>
 </Section>
