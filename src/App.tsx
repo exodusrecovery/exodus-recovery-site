@@ -733,17 +733,22 @@ const handleDonateMonthly = () => {
 
      <div className="mt-6 grid gap-3 sm:grid-cols-2">
   {/* Разовое пожертвование $50 */}
-  <a href="/go/once?amount=5000" target="_blank" rel="noopener noreferrer">One-time</a>
+  <button
+    onClick={() => handleDonateOnce(5000)}
+    className="inline-block rounded-xl bg-black text-white px-6 py-3 font-semibold shadow-md hover:bg-gray-800 transition"
+    type="button"
+  >
+    One-time donation — $50
+  </button>
 
-  {/* Ежемесячная подписка $20 — ПОДСТАВЬ свой TEST price_id */}
-  <a
-  href="/go/monthly?price_id=price_1SQewcBrWBoIIHjWbXGJ9hMN"
-  target="_blank"
-  rel="noopener noreferrer"
-  className="inline-block rounded-xl bg-[var(--brand)] text-white px-6 py-3 font-semibold shadow-md hover:bg-[var(--brand-dark)] transition text-center"
->
-  Subscribe — $20/mo
-</a>
+  {/* Ежемесячная подписка $20 */}
+  <button
+    onClick={() => handleDonateMonthly()}
+    className="inline-block rounded-xl bg-[var(--brand)] text-white px-6 py-3 font-semibold shadow-md hover:bg-[var(--brand-dark)] transition"
+    type="button"
+  >
+    Subscribe — $20/mo
+  </button>
 </div>
 
       <p className="mt-6 text-sm text-gray-500 leading-relaxed">
