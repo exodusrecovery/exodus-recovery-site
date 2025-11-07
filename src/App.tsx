@@ -329,7 +329,7 @@ const handleDonateMonthly = (priceId: string = "price_1SQewcBrWBoIIHjWbXGJ9hMN")
 
   // === Stripe test handlers ===
   
-  // ...дальше идёт return(...)
+  //// ...дальше идёт return(...)
   
   return (
     <div
