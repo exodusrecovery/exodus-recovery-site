@@ -262,13 +262,7 @@ const ContactForm = () => {
 };
 
 export default function RehabWebsite() {
-  // Универсалка: создаёт Checkout Session и возвращает URL
-// ------------------------- Stripe helpers (replace old broken code) -------------------------
-/**
- * Создаёт Checkout Session через наш backend и возвращает URL.
- * Ожидает, что на сервере есть endpoint POST /create-checkout-session
- * и что он возвращает JSON { url: "https://checkout.stripe.com/..." }.
- */
+// ------------------------- Stripe helpers (working implementation) -------------------------
 async function createCheckoutSession(payload: any): Promise<string> {
   const res = await fetch("/create-checkout-session", {
     method: "POST",
@@ -286,14 +280,9 @@ async function createCheckoutSession(payload: any): Promise<string> {
   return data.url;
 }
 
-/**
- * Безопасно открывает Stripe Checkout в новой вкладке чтобы избежать блокировок popup.
- * Принимает функцию, которая возвращает Promise<string> (URL).
- */
 function openStripeInNewTab(createSession: () => Promise<string>) {
   const win = window.open("", "_blank", "noopener,noreferrer");
   if (!win) {
-    // fallback — открыть в этой же вкладке
     createSession()
       .then((url) => (window.location.href = url))
       .catch((e) => alert(e.message || "Stripe error"));
@@ -317,10 +306,6 @@ function openStripeInNewTab(createSession: () => Promise<string>) {
     });
 }
 
-/**
- * Удобные функции-обёртки, используемые на кнопках.
- * amountCents — в центах ($50 = 5000)
- */
 const handleDonateOnce = (amountCents: number) => {
   openStripeInNewTab(() =>
     createCheckoutSession({
