@@ -6,13 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Check,
   Heart,
   Phone,
@@ -188,15 +181,15 @@ const ProgramCard = ({ icon: Icon, title, points }: any) => (
 
 // Форма связи (mailto)
 const ContactForm = () => {
-  const [topic, setTopic] = useState<string>("Consultation");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");      // ← добавили телефон
   const [message, setMessage] = useState("");
 
   const mailto = () => {
-    const subject = encodeURIComponent(`[Inquiry] ${topic} — ${name}`);
+    const subject = encodeURIComponent(`[Inquiry] ${name}`);
     const body = encodeURIComponent(
-      `Name: ${name}\nEmail: ${email}\nTopic: ${topic}\n\nMessage:\n${message}`
+      `Name: ${name}\nEmail: ${email}\nPhone: ${phone}\n\nMessage:\n${message}`
     );
     return `mailto:${BRAND.email}?subject=${subject}&body=${body}`;
   };
@@ -225,22 +218,17 @@ const ContactForm = () => {
               placeholder="you@example.com"
             />
           </div>
+
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium mb-1">Topic</label>
-            {/* Простой Select-обёрткой, как у тебя */}
-            <Select value={topic as any} onValueChange={(v) => setTopic(v as string)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a topic" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Consultation">Consultation</SelectItem>
-                <SelectItem value="Admissions">Admissions</SelectItem>
-                <SelectItem value="Partnership">Partnership</SelectItem>
-                <SelectItem value="Volunteer">Volunteer</SelectItem>
-                <SelectItem value="Other">Other</SelectItem>
-              </SelectContent>
-            </Select>
+            <label className="block text-sm font-medium mb-1">Phone</label>
+            <Input
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="+1 (555) 123-4567"
+            />
           </div>
+
           <div className="md:col-span-2">
             <label className="block text-sm font-medium mb-1">Message</label>
             <Textarea
@@ -251,6 +239,7 @@ const ContactForm = () => {
             />
           </div>
         </div>
+
         <div className="flex flex-wrap items-center gap-3">
           <a href={mailto()}>
             <Button
