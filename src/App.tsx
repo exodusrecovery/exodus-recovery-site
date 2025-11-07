@@ -264,7 +264,7 @@ const ContactForm = () => {
 export default function RehabWebsite() {
 // ------------------------- Stripe helpers (working implementation) -------------------------
 async function createCheckoutSession(payload: any): Promise<string> {
-  const res = await fetch("https://payments.my-backend.com/create-checkout-session", { ... });
+  const res = await fetch("/create-checkout-session", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify(payload),
@@ -328,8 +328,7 @@ const handleDonateMonthly = (priceId: string = "price_1SQewcBrWBoIIHjWbXGJ9hMN")
   const [activeVideo, setActiveVideo] = useState(0);
 
   // === Stripe test handlers ===
-  
-  //// ...дальше идёт return(...)
+  // ...дальше идёт return(...)
   
   return (
     <div
