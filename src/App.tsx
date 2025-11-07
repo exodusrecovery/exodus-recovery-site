@@ -264,17 +264,15 @@ const ContactForm = () => {
 export default function RehabWebsite() {
 // ------------------------- Stripe helpers (working implementation) -------------------------
 async function createCheckoutSession(payload: any): Promise<string> {
-  const res = await fetch("/create-checkout-session", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify(payload),
-});
-
+  const res = await fetch("/api/create-checkout-session", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
   if (!res.ok) {
     const txt = await res.text().catch(() => "");
     throw new Error(`create-checkout-session failed: ${res.status} ${txt}`);
   }
-
   const data = await res.json();
   if (!data?.url) throw new Error(data?.error?.message || "Stripe error: no url in response");
   return data.url;
@@ -694,22 +692,22 @@ const handleDonateMonthly = (priceId: string = "price_1SQewcBrWBoIIHjWbXGJ9hMN")
 
      <div className="mt-6 grid gap-3 sm:grid-cols-2">
   {/* Разовое пожертвование $50 */}
-  <button
-    onClick={() => handleDonateOnce(5000)}
-    className="inline-block rounded-xl bg-black text-white px-6 py-3 font-semibold shadow-md hover:bg-gray-800 transition"
-    type="button"
-  >
-    One-time donation — $50
-  </button>
+<button
+  onClick={() => openStripeInNewTab(() => createCheckoutSession({ mode: "payment", amount: 5000 }))}
+  className="inline-block rounded-xl bg-black text-white px-6 py-3 font-semibold shadow-md hover:bg-gray-800 transition"
+  type="button"
+>
+  One-time donation — $50
+</button>
 
-  {/* Ежемесячная подписка $20 */}
-  <button
-    onClick={() => handleDonateMonthly()}
-    className="inline-block rounded-xl bg-[var(--brand)] text-white px-6 py-3 font-semibold shadow-md hover:bg-[var(--brand-dark)] transition"
-    type="button"
-  >
-    Subscribe — $20/mo
-  </button>
+{/* Ежемесячная подписка $20 (подставь свой price id) */}
+<button
+  onClick={() => openStripeInNewTab(() => createCheckoutSession({ mode: "subscription", price_id: "price_1SQewcBrWBoIIHjWbXGJ9hMN" }))}
+  className="inline-block rounded-xl bg-[var(--brand)] text-white px-6 py-3 font-semibold shadow-md hover:bg-[var(--brand-dark)] transition"
+  type="button"
+>
+  Subscribe — $20/mo
+</button>
 </div>
 
       <p className="mt-6 text-sm text-gray-500 leading-relaxed">
