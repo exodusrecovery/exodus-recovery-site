@@ -152,6 +152,7 @@ app.get("/go/monthly", async (req, res) => {
     res.status(400).send(err?.message || "Stripe error");
   }
 });
+
 app.listen(PORT, () => {
   console.log(`Stripe server running → http://localhost:${PORT}`);
   console.log(`DOMAIN for redirects  → ${DOMAIN}`);
