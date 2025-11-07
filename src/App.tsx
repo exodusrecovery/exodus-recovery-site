@@ -282,27 +282,22 @@ function openStripeInNewTab(createSession: () => Promise<string>) {
   const win = window.open("", "_blank", "noopener,noreferrer");
   if (!win) {
     createSession()
-      .then((url) => (window.location.href = url))
-      .catch((e) => alert(e.message || "Stripe error"));
+      .then((url) => { window.location.href = url; })
+      .catch((e) => alert(e?.message || "Stripe error"));
     return;
   }
-
-  win.document.write("<p style='font:16px system-ui;margin:20px'>Redirecting to Stripe…</p>");
-
+  try { win.opener = null; } catch {}
+  try {
+    win.document.write("<!doctype html><html><head><meta charset='utf-8'><title>Redirecting…</title></head><body style='font-family:system-ui, -apple-system, Roboto, sans-serif; padding:24px;'><h2>Redirecting to secure payment...</h2><p>If you are not redirected automatically, please wait or close this tab and try again.</p></body></html>");
+  } catch {}
   createSession()
     .then((url) => {
-      try {
-        win.location.href = url;
-      } catch (err) {
-        win.close();
-        alert("Could not open Stripe Checkout.");
-      }
+      try { win.location.href = url; }
+      catch (err) { try { win.close(); } catch {} alert("Could not open Stripe Checkout in the new tab."); }
     })
-    .catch((e) => {
-      win.close();
-      alert(e.message || "Stripe error");
-    });
+    .catch((e) => { try { win.close(); } catch {} alert(e?.message || "Stripe error"); });
 }
+
 
 const handleDonateOnce = (amountCents: number) => {
   openStripeInNewTab(() =>
