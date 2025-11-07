@@ -89,7 +89,7 @@ const ContactForm = () => {
 export default function RehabWebsite() {
     // ------------------------- Stripe helpers (working implementation) -------------------------
     async function createCheckoutSession(payload) {
-        const res = await fetch("/create-checkout-session", {
+        const res = await fetch("/api/create-checkout-session", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
@@ -107,25 +107,35 @@ export default function RehabWebsite() {
         const win = window.open("", "_blank", "noopener,noreferrer");
         if (!win) {
             createSession()
-                .then((url) => (window.location.href = url))
-                .catch((e) => alert(e.message || "Stripe error"));
+                .then((url) => { window.location.href = url; })
+                .catch((e) => alert(e?.message || "Stripe error"));
             return;
         }
-        win.document.write("<p style='font:16px system-ui;margin:20px'>Redirecting to Stripe…</p>");
+        try {
+            win.opener = null;
+        }
+        catch { }
+        try {
+            win.document.write("<!doctype html><html><head><meta charset='utf-8'><title>Redirecting…</title></head><body style='font-family:system-ui, -apple-system, Roboto, sans-serif; padding:24px;'><h2>Redirecting to secure payment...</h2><p>If you are not redirected automatically, please wait or close this tab and try again.</p></body></html>");
+        }
+        catch { }
         createSession()
             .then((url) => {
             try {
                 win.location.href = url;
             }
             catch (err) {
-                win.close();
-                alert("Could not open Stripe Checkout.");
+                try {
+                    win.close();
+                }
+                catch { }
+                alert("Could not open Stripe Checkout in the new tab.");
             }
         })
-            .catch((e) => {
+            .catch((e) => { try {
             win.close();
-            alert(e.message || "Stripe error");
-        });
+        }
+        catch { } alert(e?.message || "Stripe error"); });
     }
     const handleDonateOnce = (amountCents) => {
         openStripeInNewTab(() => createCheckoutSession({
@@ -133,7 +143,7 @@ export default function RehabWebsite() {
             amount: amountCents,
         }));
     };
-    const handleDonateMonthly = (priceId = "price_1SQewcBrWBoIIHjWbXGJ9hMN") => {
+    const handleDonateMonthly = (priceId = "price_1SQdWEBrWBoIIHjWnOeeyFNE") => {
         openStripeInNewTab(() => createCheckoutSession({
             mode: "subscription",
             price_id: priceId,
@@ -238,7 +248,7 @@ export default function RehabWebsite() {
                             "/images/gallery/17.jpg",
                         ]
                             .slice(0, 8) // показываем только 8 фото
-                            .map((src, i) => (_jsxs(motion.div, { initial: { opacity: 0, y: 20 }, whileInView: { opacity: 1, y: 0 }, whileHover: { scale: 1.05 }, transition: { duration: 0.4, ease: "easeOut" }, viewport: { once: true }, className: "relative overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm group", style: { aspectRatio: "4 / 3" }, children: [_jsx("img", { src: src, alt: `Gallery ${i + 1}`, className: "h-full w-full object-cover transition-transform duration-500 group-hover:scale-105", loading: "lazy" }), _jsx("div", { className: "pointer-events-none absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" })] }, i))) }), _jsx("div", { className: "mt-10 text-center", children: _jsx("a", { href: "/gallery", className: "inline-block rounded-xl bg-[var(--brand)] text-white px-8 py-3 text-lg font-semibold shadow-md hover:bg-[var(--brand-dark)] transition", children: "View full gallery \u2192" }) })] }), showFeliks && (_jsx("div", { className: "fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4", onClick: () => setShowFeliks(false), "aria-modal": "true", role: "dialog", children: _jsxs("div", { className: "relative w-full max-w-3xl rounded-2xl overflow-hidden bg-black shadow-2xl", onClick: (e) => e.stopPropagation(), children: [_jsx("button", { onClick: () => setShowFeliks(false), className: "absolute right-3 top-3 z-10 rounded-full bg-white/90 px-3 py-1 text-sm font-medium shadow hover:bg-white", "aria-label": "Close video", children: "Close" }), _jsx("div", { className: "aspect-video", children: _jsxs("video", { className: "h-full w-full", controls: true, preload: "metadata", poster: "/images/people/feliks.jpg", children: [_jsx("source", { src: "/videos/feliks.mp4", type: "video/mp4" }), "Your browser does not support the video tag."] }) })] }) })), _jsx(Section, { id: "support", title: "Support the Mission", subtitle: "Your generosity helps us bring hope, freedom, and restoration through the ministry of Church of God Exodus.", children: _jsxs("div", { className: "relative py-16", children: [_jsx("div", { className: "absolute inset-0 bg-gradient-to-b from-gray-100 via-gray-50 to-gray-100 rounded-3xl" }), _jsx("div", { className: "pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 h-80 w-80 rounded-full bg-emerald-100/40 blur-3xl" }), _jsx("div", { className: "pointer-events-none absolute bottom-0 right-1/3 h-64 w-64 rounded-full bg-indigo-100/40 blur-3xl" }), _jsxs(motion.div, { className: "relative mx-auto max-w-md rounded-2xl bg-white p-10 shadow-2xl ring-1 ring-gray-200 text-center backdrop-blur-sm", variants: fadeInUp, initial: "hidden", whileInView: "show", whileHover: { scale: 1.02 }, transition: { type: "spring", stiffness: 120 }, viewport: { once: true, margin: "-80px" }, children: [_jsx("h4", { className: "text-3xl font-bold text-gray-900 mb-4", children: "Give to Church of God Exodus" }), _jsx("p", { className: "text-gray-600 mb-6 text-base leading-relaxed", children: "Your gift supports our church ministry and outreach to people seeking freedom and a new life in Christ." }), _jsxs("div", { className: "mt-6 grid gap-3 sm:grid-cols-2", children: [_jsx("button", { onClick: () => handleDonateOnce(5000), className: "inline-block rounded-xl bg-black text-white px-6 py-3 font-semibold shadow-md hover:bg-gray-800 transition", type: "button", children: "One-time donation \u2014 $50" }), _jsx("button", { onClick: () => handleDonateMonthly(), className: "inline-block rounded-xl bg-[var(--brand)] text-white px-6 py-3 font-semibold shadow-md hover:bg-[var(--brand-dark)] transition", type: "button", children: "Subscribe \u2014 $20/mo" })] }), _jsxs("p", { className: "mt-6 text-sm text-gray-500 leading-relaxed", children: ["All donations are securely processed by Stripe. ", _jsx("br", {}), "Thank you for partnering with us in this ministry."] })] })] }) }), _jsx(Section, { id: "programs", title: "Programs", subtitle: "Multi-stage care tailored to your recovery journey.", children: _jsxs("div", { className: "grid md:grid-cols-2 gap-6", children: [_jsx(ProgramCard, { icon: Calendar, title: "Stage 1 - Inpatient (6 months)", points: [
+                            .map((src, i) => (_jsxs(motion.div, { initial: { opacity: 0, y: 20 }, whileInView: { opacity: 1, y: 0 }, whileHover: { scale: 1.05 }, transition: { duration: 0.4, ease: "easeOut" }, viewport: { once: true }, className: "relative overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm group", style: { aspectRatio: "4 / 3" }, children: [_jsx("img", { src: src, alt: `Gallery ${i + 1}`, className: "h-full w-full object-cover transition-transform duration-500 group-hover:scale-105", loading: "lazy" }), _jsx("div", { className: "pointer-events-none absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" })] }, i))) }), _jsx("div", { className: "mt-10 text-center", children: _jsx("a", { href: "/gallery", className: "inline-block rounded-xl bg-[var(--brand)] text-white px-8 py-3 text-lg font-semibold shadow-md hover:bg-[var(--brand-dark)] transition", children: "View full gallery \u2192" }) })] }), showFeliks && (_jsx("div", { className: "fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4", onClick: () => setShowFeliks(false), "aria-modal": "true", role: "dialog", children: _jsxs("div", { className: "relative w-full max-w-3xl rounded-2xl overflow-hidden bg-black shadow-2xl", onClick: (e) => e.stopPropagation(), children: [_jsx("button", { onClick: () => setShowFeliks(false), className: "absolute right-3 top-3 z-10 rounded-full bg-white/90 px-3 py-1 text-sm font-medium shadow hover:bg-white", "aria-label": "Close video", children: "Close" }), _jsx("div", { className: "aspect-video", children: _jsxs("video", { className: "h-full w-full", controls: true, preload: "metadata", poster: "/images/people/feliks.jpg", children: [_jsx("source", { src: "/videos/feliks.mp4", type: "video/mp4" }), "Your browser does not support the video tag."] }) })] }) })), _jsx(Section, { id: "support", title: "Support the Mission", subtitle: "Your generosity helps us bring hope, freedom, and restoration through the ministry of Church of God Exodus.", children: _jsxs("div", { className: "relative py-16", children: [_jsx("div", { className: "absolute inset-0 bg-gradient-to-b from-gray-100 via-gray-50 to-gray-100 rounded-3xl" }), _jsx("div", { className: "pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 h-80 w-80 rounded-full bg-emerald-100/40 blur-3xl" }), _jsx("div", { className: "pointer-events-none absolute bottom-0 right-1/3 h-64 w-64 rounded-full bg-indigo-100/40 blur-3xl" }), _jsxs(motion.div, { className: "relative mx-auto max-w-md rounded-2xl bg-white p-10 shadow-2xl ring-1 ring-gray-200 text-center backdrop-blur-sm", variants: fadeInUp, initial: "hidden", whileInView: "show", whileHover: { scale: 1.02 }, transition: { type: "spring", stiffness: 120 }, viewport: { once: true, margin: "-80px" }, children: [_jsx("h4", { className: "text-3xl font-bold text-gray-900 mb-4", children: "Give to Church of God Exodus" }), _jsx("p", { className: "text-gray-600 mb-6 text-base leading-relaxed", children: "Your gift supports our church ministry and outreach to people seeking freedom and a new life in Christ." }), _jsxs("div", { className: "mt-6 grid gap-3 sm:grid-cols-2", children: [_jsx("button", { onClick: () => openStripeInNewTab(() => createCheckoutSession({ mode: "payment", amount: 5000 })), className: "inline-block rounded-xl bg-black text-white px-6 py-3 font-semibold shadow-md hover:bg-gray-800 transition", type: "button", children: "One-time donation \u2014 $50" }), _jsx("button", { onClick: () => openStripeInNewTab(() => createCheckoutSession({ mode: "subscription", price_id: "price_1SQdWEBrWBoIIHjWnOeeyFNE" })), className: "inline-block rounded-xl bg-[var(--brand)] text-white px-6 py-3 font-semibold shadow-md hover:bg-[var(--brand-dark)] transition", type: "button", children: "Subscribe \u2014 $20/mo" })] }), _jsxs("p", { className: "mt-6 text-sm text-gray-500 leading-relaxed", children: ["All donations are securely processed by Stripe. ", _jsx("br", {}), "Thank you for partnering with us in this ministry."] })] })] }) }), _jsx(Section, { id: "programs", title: "Programs", subtitle: "Multi-stage care tailored to your recovery journey.", children: _jsxs("div", { className: "grid md:grid-cols-2 gap-6", children: [_jsx(ProgramCard, { icon: Calendar, title: "Stage 1 - Inpatient (6 months)", points: [
                                 "Residential, structured daily schedule",
                                 "Discipleship, counseling, work therapy",
                                 "Relapse-prevention & life skills",
