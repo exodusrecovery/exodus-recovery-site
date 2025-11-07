@@ -315,7 +315,7 @@ const handleDonateOnce = (amountCents: number) => {
   );
 };
 
-const handleDonateMonthly = (priceId: string) => {
+const handleDonateMonthly = (priceId: string = "price_1SQewcBrWBoIIHjWbXGJ9hMN") => {
   openStripeInNewTab(() =>
     createCheckoutSession({
       mode: "subscription",
@@ -328,44 +328,7 @@ const handleDonateMonthly = (priceId: string) => {
   const [activeVideo, setActiveVideo] = useState(0);
 
   // === Stripe test handlers ===
-  const handleDonateOnce = ...
-    try {
-      const res = await fetch("/create-checkout-session", { ... })
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          mode: "payment",
-          amount: amountCents, // В ЦЕНТАХ ($50 = 5000)
-          // можно опустить success/cancel — сервер уже подставляет из DOMAIN
-        }),
-      });
-      const data = await res.json();
-      if (data.url) window.location.href = data.url;
-      else alert(data?.error?.message || "Stripe error");
-    } catch (e: any) {
-      alert(e?.message || "Network error");
-    }
-  };
-
-  const handleDonateMonthly = ...
-    try {
-      const res = await fetch("/create-checkout-session", { ... })
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          mode: "subscription",
-          // 👇 ВСТАВЬ СВОЙ реальный TEST price_id из Stripe
-          price_id: "price_1SQewcBrWBoIIHjWbXGJ9hMN",
-        }),
-      });
-      const data = await res.json();
-      if (data.url) window.location.href = data.url;
-      else alert(data?.error?.message || "Stripe error");
-    } catch (e: any) {
-      alert(e?.message || "Network error");
-    }
-  };
-
+  
   // ...дальше идёт return(...)
   
   return (
