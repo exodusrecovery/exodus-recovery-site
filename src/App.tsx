@@ -313,7 +313,7 @@ const handleDonateOnce = (amountCents: number) => {
   );
 };
 
-const handleDonateMonthly = (priceId: string = "price_1SQewcBrWBoIIHjWbXGJ9hMN") => {
+const handleDonateMonthly = (priceId: string = "price_LIVE_FROM_STRIPE") => {
   openStripeInNewTab(() =>
     createCheckoutSession({
       mode: "subscription",
@@ -702,7 +702,7 @@ const handleDonateMonthly = (priceId: string = "price_1SQewcBrWBoIIHjWbXGJ9hMN")
 
 {/* Ежемесячная подписка $20 (подставь свой price id) */}
 <button
-  onClick={() => openStripeInNewTab(() => createCheckoutSession({ mode: "subscription", price_id: "price_1SQewcBrWBoIIHjWbXGJ9hMN" }))}
+  onClick={() => openStripeInNewTab(() => createCheckoutSession({ mode: "subscription", price_id: "price_LIVE_FROM_STRIPE" }))}
   className="inline-block rounded-xl bg-[var(--brand)] text-white px-6 py-3 font-semibold shadow-md hover:bg-[var(--brand-dark)] transition"
   type="button"
 >
