@@ -264,11 +264,11 @@ const ContactForm = () => {
 export default function RehabWebsite() {
 // ------------------------- Stripe helpers (working implementation) -------------------------
 async function createCheckoutSession(payload: any): Promise<string> {
-  const res = await fetch("/create-checkout-session", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
+  const res = await fetch("https://payments.my-backend.com/create-checkout-session", { ... });
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(payload),
+});
 
   if (!res.ok) {
     const txt = await res.text().catch(() => "");

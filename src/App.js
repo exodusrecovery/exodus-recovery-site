@@ -87,39 +87,37 @@ const ContactForm = () => {
     return (_jsxs(Card, { className: "rounded-2xl shadow-sm", children: [_jsx(CardHeader, { children: _jsx(CardTitle, { children: "Contact us" }) }), _jsxs(CardContent, { className: "grid gap-4", children: [_jsxs("div", { className: "grid grid-cols-1 md:grid-cols-2 gap-4", children: [_jsxs("div", { children: [_jsx("label", { className: "block text-sm font-medium mb-1", children: "Your name" }), _jsx(Input, { value: name, onChange: (e) => setName(e.target.value), placeholder: "John Smith" })] }), _jsxs("div", { children: [_jsx("label", { className: "block text-sm font-medium mb-1", children: "Email" }), _jsx(Input, { type: "email", value: email, onChange: (e) => setEmail(e.target.value), placeholder: "you@example.com" })] }), _jsxs("div", { className: "md:col-span-2", children: [_jsx("label", { className: "block text-sm font-medium mb-1", children: "Phone" }), _jsx(Input, { type: "tel", value: phone, onChange: (e) => setPhone(e.target.value), placeholder: "+1 (555) 123-4567" })] }), _jsxs("div", { className: "md:col-span-2", children: [_jsx("label", { className: "block text-sm font-medium mb-1", children: "Message" }), _jsx(Textarea, { value: message, onChange: (e) => setMessage(e.target.value), rows: 5, placeholder: "Briefly describe your situation" })] })] }), _jsxs("div", { className: "flex flex-wrap items-center gap-3", children: [_jsx("a", { href: mailto(), children: _jsxs(Button, { className: "rounded-xl px-6 text-base", style: { background: BRAND.colors.primary }, children: ["Send request ", _jsx(ArrowRight, { className: "ml-2 h-5 w-5" })] }) }), _jsxs("div", { className: "text-sm text-slate-600", children: ["or call", " ", _jsx("a", { className: "underline", href: `tel:${BRAND.phone}`, children: BRAND.phone })] })] })] })] }));
 };
 export default function RehabWebsite() {
-    // Универсалка: создаёт Checkout Session и возвращает URL
+    // ------------------------- Stripe helpers (working implementation) -------------------------
     async function createCheckoutSession(payload) {
-        const res = await fetch("http://localhost:4242/create-checkout-session", {
+        const res = await fetch("/create-checkout-session", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
         });
+        if (!res.ok) {
+            const txt = await res.text().catch(() => "");
+            throw new Error(`create-checkout-session failed: ${res.status} ${txt}`);
+        }
         const data = await res.json();
         if (!data?.url)
-            throw new Error(data?.error?.message || "Stripe error");
+            throw new Error(data?.error?.message || "Stripe error: no url in response");
         return data.url;
     }
-    // Открыть Stripe в НОВОЙ вкладке, не попав под блокировку
     function openStripeInNewTab(createSession) {
-        // 1) Открываем вкладку синхронно по клику — браузер не блокирует
         const win = window.open("", "_blank", "noopener,noreferrer");
-        // Если браузер всё-таки запретил — делаем редирект в этом же окне (фоллбек)
         if (!win) {
             createSession()
                 .then((url) => (window.location.href = url))
                 .catch((e) => alert(e.message || "Stripe error"));
             return;
         }
-        // 2) Легкий плейсхолдер, чтобы вкладка не была пустой
         win.document.write("<p style='font:16px system-ui;margin:20px'>Redirecting to Stripe…</p>");
-        // 3) Когда URL готов — меняем location у уже открытой вкладки
         createSession()
             .then((url) => {
             try {
                 win.location.href = url;
             }
-            catch {
-                // На всякий случай закрыть, если что-то пошло не так
+            catch (err) {
                 win.close();
                 alert("Could not open Stripe Checkout.");
             }
@@ -129,65 +127,22 @@ export default function RehabWebsite() {
             alert(e.message || "Stripe error");
         });
     }
-    // Твои удобные обёртки:
     const handleDonateOnce = (amountCents) => {
         openStripeInNewTab(() => createCheckoutSession({
             mode: "payment",
-            amount: amountCents, // в центах
-            // success/cancel можно не указывать — сервер берёт из DOMAIN
+            amount: amountCents,
         }));
     };
-    const handleDonateMonthly = () => {
+    const handleDonateMonthly = (priceId = "price_1SQewcBrWBoIIHjWbXGJ9hMN") => {
         openStripeInNewTab(() => createCheckoutSession({
             mode: "subscription",
-            price_id: "price_1SQewcBrWBoIIHjWbXGJ9hMN", // ← подставь правильный TEST price_id
+            price_id: priceId,
         }));
     };
+    // ------------------------- end Stripe helpers ------------------------------------------------
     const [showFeliks, setShowFeliks] = useState(false);
     const [activeVideo, setActiveVideo] = useState(0);
     // === Stripe test handlers ===
-    const donateOnce = async (amountCents) => {
-        try {
-            const res = await fetch("http://localhost:4242/create-checkout-session", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    mode: "payment",
-                    amount: amountCents, // В ЦЕНТАХ ($50 = 5000)
-                    // можно опустить success/cancel — сервер уже подставляет из DOMAIN
-                }),
-            });
-            const data = await res.json();
-            if (data.url)
-                window.location.href = data.url;
-            else
-                alert(data?.error?.message || "Stripe error");
-        }
-        catch (e) {
-            alert(e?.message || "Network error");
-        }
-    };
-    const donateMonthly = async () => {
-        try {
-            const res = await fetch("http://localhost:4242/create-checkout-session", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    mode: "subscription",
-                    // 👇 ВСТАВЬ СВОЙ реальный TEST price_id из Stripe
-                    price_id: "price_1SQewcBrWBoIIHjWbXGJ9hMN",
-                }),
-            });
-            const data = await res.json();
-            if (data.url)
-                window.location.href = data.url;
-            else
-                alert(data?.error?.message || "Stripe error");
-        }
-        catch (e) {
-            alert(e?.message || "Network error");
-        }
-    };
     // ...дальше идёт return(...)
     return (_jsxs("div", { className: "relative overflow-hidden min-h-screen bg-gradient-to-b from-gray-100 to-gray-200", style: { color: BRAND.colors.text }, children: [_jsx("div", { className: "pointer-events-none absolute -top-20 -left-20 h-80 w-80 rounded-full bg-white/30 blur-3xl" }), _jsx("div", { className: "pointer-events-none absolute -bottom-24 -right-24 h-96 w-96 rounded-full bg-white/20 blur-3xl" }), _jsx("style", { children: `
      
@@ -283,7 +238,7 @@ export default function RehabWebsite() {
                             "/images/gallery/17.jpg",
                         ]
                             .slice(0, 8) // показываем только 8 фото
-                            .map((src, i) => (_jsxs(motion.div, { initial: { opacity: 0, y: 20 }, whileInView: { opacity: 1, y: 0 }, whileHover: { scale: 1.05 }, transition: { duration: 0.4, ease: "easeOut" }, viewport: { once: true }, className: "relative overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm group", style: { aspectRatio: "4 / 3" }, children: [_jsx("img", { src: src, alt: `Gallery ${i + 1}`, className: "h-full w-full object-cover transition-transform duration-500 group-hover:scale-105", loading: "lazy" }), _jsx("div", { className: "pointer-events-none absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" })] }, i))) }), _jsx("div", { className: "mt-10 text-center", children: _jsx("a", { href: "/gallery", className: "inline-block rounded-xl bg-[var(--brand)] text-white px-8 py-3 text-lg font-semibold shadow-md hover:bg-[var(--brand-dark)] transition", children: "View full gallery \u2192" }) })] }), showFeliks && (_jsx("div", { className: "fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4", onClick: () => setShowFeliks(false), "aria-modal": "true", role: "dialog", children: _jsxs("div", { className: "relative w-full max-w-3xl rounded-2xl overflow-hidden bg-black shadow-2xl", onClick: (e) => e.stopPropagation(), children: [_jsx("button", { onClick: () => setShowFeliks(false), className: "absolute right-3 top-3 z-10 rounded-full bg-white/90 px-3 py-1 text-sm font-medium shadow hover:bg-white", "aria-label": "Close video", children: "Close" }), _jsx("div", { className: "aspect-video", children: _jsxs("video", { className: "h-full w-full", controls: true, preload: "metadata", poster: "/images/people/feliks.jpg", children: [_jsx("source", { src: "/videos/feliks.mp4", type: "video/mp4" }), "Your browser does not support the video tag."] }) })] }) })), _jsx(Section, { id: "support", title: "Support the Mission", subtitle: "Your generosity helps us bring hope, freedom, and restoration through the ministry of Church of God Exodus.", children: _jsxs("div", { className: "relative py-16", children: [_jsx("div", { className: "absolute inset-0 bg-gradient-to-b from-gray-100 via-gray-50 to-gray-100 rounded-3xl" }), _jsx("div", { className: "pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 h-80 w-80 rounded-full bg-emerald-100/40 blur-3xl" }), _jsx("div", { className: "pointer-events-none absolute bottom-0 right-1/3 h-64 w-64 rounded-full bg-indigo-100/40 blur-3xl" }), _jsxs(motion.div, { className: "relative mx-auto max-w-md rounded-2xl bg-white p-10 shadow-2xl ring-1 ring-gray-200 text-center backdrop-blur-sm", variants: fadeInUp, initial: "hidden", whileInView: "show", whileHover: { scale: 1.02 }, transition: { type: "spring", stiffness: 120 }, viewport: { once: true, margin: "-80px" }, children: [_jsx("h4", { className: "text-3xl font-bold text-gray-900 mb-4", children: "Give to Church of God Exodus" }), _jsx("p", { className: "text-gray-600 mb-6 text-base leading-relaxed", children: "Your gift supports our church ministry and outreach to people seeking freedom and a new life in Christ." }), _jsxs("div", { className: "mt-6 grid gap-3 sm:grid-cols-2", children: [_jsx("a", { href: "http://localhost:4242/go/once?amount=5000", target: "_blank", rel: "noopener noreferrer", className: "inline-block rounded-xl bg-black text-white px-6 py-3 font-semibold shadow-md hover:bg-gray-800 transition text-center", children: "One-time donation \u2014 $50 (test)" }), _jsx("a", { href: "http://localhost:4242/go/monthly?price_id=price_1SQewcBrWBoIIHjWbXGJ9hMN", target: "_blank", rel: "noopener noreferrer", className: "inline-block rounded-xl bg-[var(--brand)] text-white px-6 py-3 font-semibold shadow-md hover:bg-[var(--brand-dark)] transition text-center", children: "Subscribe \u2014 $20/mo (test)" })] }), _jsxs("p", { className: "mt-6 text-sm text-gray-500 leading-relaxed", children: ["All donations are securely processed by Stripe. ", _jsx("br", {}), "Thank you for partnering with us in this ministry."] })] })] }) }), _jsx(Section, { id: "programs", title: "Programs", subtitle: "Multi-stage care tailored to your recovery journey.", children: _jsxs("div", { className: "grid md:grid-cols-2 gap-6", children: [_jsx(ProgramCard, { icon: Calendar, title: "Stage 1 - Inpatient (6 months)", points: [
+                            .map((src, i) => (_jsxs(motion.div, { initial: { opacity: 0, y: 20 }, whileInView: { opacity: 1, y: 0 }, whileHover: { scale: 1.05 }, transition: { duration: 0.4, ease: "easeOut" }, viewport: { once: true }, className: "relative overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm group", style: { aspectRatio: "4 / 3" }, children: [_jsx("img", { src: src, alt: `Gallery ${i + 1}`, className: "h-full w-full object-cover transition-transform duration-500 group-hover:scale-105", loading: "lazy" }), _jsx("div", { className: "pointer-events-none absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" })] }, i))) }), _jsx("div", { className: "mt-10 text-center", children: _jsx("a", { href: "/gallery", className: "inline-block rounded-xl bg-[var(--brand)] text-white px-8 py-3 text-lg font-semibold shadow-md hover:bg-[var(--brand-dark)] transition", children: "View full gallery \u2192" }) })] }), showFeliks && (_jsx("div", { className: "fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4", onClick: () => setShowFeliks(false), "aria-modal": "true", role: "dialog", children: _jsxs("div", { className: "relative w-full max-w-3xl rounded-2xl overflow-hidden bg-black shadow-2xl", onClick: (e) => e.stopPropagation(), children: [_jsx("button", { onClick: () => setShowFeliks(false), className: "absolute right-3 top-3 z-10 rounded-full bg-white/90 px-3 py-1 text-sm font-medium shadow hover:bg-white", "aria-label": "Close video", children: "Close" }), _jsx("div", { className: "aspect-video", children: _jsxs("video", { className: "h-full w-full", controls: true, preload: "metadata", poster: "/images/people/feliks.jpg", children: [_jsx("source", { src: "/videos/feliks.mp4", type: "video/mp4" }), "Your browser does not support the video tag."] }) })] }) })), _jsx(Section, { id: "support", title: "Support the Mission", subtitle: "Your generosity helps us bring hope, freedom, and restoration through the ministry of Church of God Exodus.", children: _jsxs("div", { className: "relative py-16", children: [_jsx("div", { className: "absolute inset-0 bg-gradient-to-b from-gray-100 via-gray-50 to-gray-100 rounded-3xl" }), _jsx("div", { className: "pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 h-80 w-80 rounded-full bg-emerald-100/40 blur-3xl" }), _jsx("div", { className: "pointer-events-none absolute bottom-0 right-1/3 h-64 w-64 rounded-full bg-indigo-100/40 blur-3xl" }), _jsxs(motion.div, { className: "relative mx-auto max-w-md rounded-2xl bg-white p-10 shadow-2xl ring-1 ring-gray-200 text-center backdrop-blur-sm", variants: fadeInUp, initial: "hidden", whileInView: "show", whileHover: { scale: 1.02 }, transition: { type: "spring", stiffness: 120 }, viewport: { once: true, margin: "-80px" }, children: [_jsx("h4", { className: "text-3xl font-bold text-gray-900 mb-4", children: "Give to Church of God Exodus" }), _jsx("p", { className: "text-gray-600 mb-6 text-base leading-relaxed", children: "Your gift supports our church ministry and outreach to people seeking freedom and a new life in Christ." }), _jsxs("div", { className: "mt-6 grid gap-3 sm:grid-cols-2", children: [_jsx("button", { onClick: () => handleDonateOnce(5000), className: "inline-block rounded-xl bg-black text-white px-6 py-3 font-semibold shadow-md hover:bg-gray-800 transition", type: "button", children: "One-time donation \u2014 $50" }), _jsx("button", { onClick: () => handleDonateMonthly(), className: "inline-block rounded-xl bg-[var(--brand)] text-white px-6 py-3 font-semibold shadow-md hover:bg-[var(--brand-dark)] transition", type: "button", children: "Subscribe \u2014 $20/mo" })] }), _jsxs("p", { className: "mt-6 text-sm text-gray-500 leading-relaxed", children: ["All donations are securely processed by Stripe. ", _jsx("br", {}), "Thank you for partnering with us in this ministry."] })] })] }) }), _jsx(Section, { id: "programs", title: "Programs", subtitle: "Multi-stage care tailored to your recovery journey.", children: _jsxs("div", { className: "grid md:grid-cols-2 gap-6", children: [_jsx(ProgramCard, { icon: Calendar, title: "Stage 1 - Inpatient (6 months)", points: [
                                 "Residential, structured daily schedule",
                                 "Discipleship, counseling, work therapy",
                                 "Relapse-prevention & life skills",
