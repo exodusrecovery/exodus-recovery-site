@@ -329,7 +329,7 @@ const handleDonateMonthly = () => {
   const [activeVideo, setActiveVideo] = useState(0);
 
   // === Stripe test handlers ===
-  const donateOnce = async (amountCents: number) => {
+  const handleDonateOnce = ...
     try {
       const res = await fetch("/create-checkout-session", { ... })
         method: "POST",
@@ -348,7 +348,7 @@ const handleDonateMonthly = () => {
     }
   };
 
-  const donateMonthly = async () => {
+  const handleDonateMonthly = ...
     try {
       const res = await fetch("/create-checkout-session", { ... })
         method: "POST",
