@@ -279,23 +279,39 @@ async function createCheckoutSession(payload: any): Promise<string> {
 }
 
 function openStripeInNewTab(createSession: () => Promise<string>) {
-  const win = window.open("", "_blank", "noopener,noreferrer");
+  // open a blank tab (no noopener) so we can set its location later
+  const win = window.open("", "_blank");
   if (!win) {
+    // fallback — navigate current tab
     createSession()
-      .then((url) => { window.location.href = url; })
-      .catch((e) => alert(e?.message || "Stripe error"));
+      .then((url) => (window.location.href = url))
+      .catch((e) => alert(e.message || "Stripe error"));
     return;
   }
-  try { win.opener = null; } catch {}
+
+  // try to show a small message in the new tab (best-effort)
   try {
-    win.document.write("<!doctype html><html><head><meta charset='utf-8'><title>Redirecting…</title></head><body style='font-family:system-ui, -apple-system, Roboto, sans-serif; padding:24px;'><h2>Redirecting to secure payment...</h2><p>If you are not redirected automatically, please wait or close this tab and try again.</p></body></html>");
-  } catch {}
+    win.document.write("<p style=\'font:16px system-ui;margin:20px\'>Redirecting to Stripe…</p>");
+  } catch (err) {
+    // ignore
+  }
+
   createSession()
     .then((url) => {
-      try { win.location.href = url; }
-      catch (err) { try { win.close(); } catch {} alert("Could not open Stripe Checkout in the new tab."); }
+      try {
+        // try navigating the new tab
+        win.location.href = url;
+        try { win.opener = null; } catch (e) {}
+      } catch (err) {
+        // if not possible — close new tab and navigate current tab
+        try { win.close(); } catch (e) {}
+        window.location.href = url;
+      }
     })
-    .catch((e) => { try { win.close(); } catch {} alert(e?.message || "Stripe error"); });
+    .catch((e) => {
+      try { win.close(); } catch (err) {}
+      alert(e.message || "Stripe error");
+    });
 }
 
 
