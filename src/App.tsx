@@ -263,39 +263,50 @@ const ContactForm = () => {
 
 export default function RehabWebsite() {
   // Универсалка: создаёт Checkout Session и возвращает URL
+// ------------------------- Stripe helpers (replace old broken code) -------------------------
+/**
+ * Создаёт Checkout Session через наш backend и возвращает URL.
+ * Ожидает, что на сервере есть endpoint POST /create-checkout-session
+ * и что он возвращает JSON { url: "https://checkout.stripe.com/..." }.
+ */
 async function createCheckoutSession(payload: any): Promise<string> {
-  const res = await fetch("/create-checkout-session", { ... })
+  const res = await fetch("/create-checkout-session", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
+
+  if (!res.ok) {
+    const txt = await res.text().catch(() => "");
+    throw new Error(`create-checkout-session failed: ${res.status} ${txt}`);
+  }
+
   const data = await res.json();
-  if (!data?.url) throw new Error(data?.error?.message || "Stripe error");
+  if (!data?.url) throw new Error(data?.error?.message || "Stripe error: no url in response");
   return data.url;
 }
 
-// Открыть Stripe в НОВОЙ вкладке, не попав под блокировку
+/**
+ * Безопасно открывает Stripe Checkout в новой вкладке чтобы избежать блокировок popup.
+ * Принимает функцию, которая возвращает Promise<string> (URL).
+ */
 function openStripeInNewTab(createSession: () => Promise<string>) {
-  // 1) Открываем вкладку синхронно по клику — браузер не блокирует
   const win = window.open("", "_blank", "noopener,noreferrer");
-  // Если браузер всё-таки запретил — делаем редирект в этом же окне (фоллбек)
   if (!win) {
+    // fallback — открыть в этой же вкладке
     createSession()
       .then((url) => (window.location.href = url))
       .catch((e) => alert(e.message || "Stripe error"));
     return;
   }
 
-  // 2) Легкий плейсхолдер, чтобы вкладка не была пустой
   win.document.write("<p style='font:16px system-ui;margin:20px'>Redirecting to Stripe…</p>");
 
-  // 3) Когда URL готов — меняем location у уже открытой вкладки
   createSession()
     .then((url) => {
       try {
         win.location.href = url;
-      } catch {
-        // На всякий случай закрыть, если что-то пошло не так
+      } catch (err) {
         win.close();
         alert("Could not open Stripe Checkout.");
       }
@@ -306,25 +317,28 @@ function openStripeInNewTab(createSession: () => Promise<string>) {
     });
 }
 
-// Твои удобные обёртки:
+/**
+ * Удобные функции-обёртки, используемые на кнопках.
+ * amountCents — в центах ($50 = 5000)
+ */
 const handleDonateOnce = (amountCents: number) => {
   openStripeInNewTab(() =>
     createCheckoutSession({
       mode: "payment",
-      amount: amountCents, // в центах
-      // success/cancel можно не указывать — сервер берёт из DOMAIN
+      amount: amountCents,
     })
   );
 };
 
-const handleDonateMonthly = () => {
+const handleDonateMonthly = (priceId: string) => {
   openStripeInNewTab(() =>
     createCheckoutSession({
       mode: "subscription",
-      price_id: "price_1SQewcBrWBoIIHjWbXGJ9hMN", // ← подставь правильный TEST price_id
+      price_id: priceId,
     })
   );
 };
+// ------------------------- end Stripe helpers ------------------------------------------------
   const [showFeliks, setShowFeliks] = useState(false);
   const [activeVideo, setActiveVideo] = useState(0);
 
