@@ -1100,14 +1100,21 @@ export default function RehabWebsite() {
       <footer className="mt-10 border-t border-slate-200">
         <div className="max-w-6xl mx-auto px-4 py-10 grid md:grid-cols-3 gap-6 text-sm text-slate-600">
           <div>
-            <div className="flex items-center gap-3">
-              <img src="/logo-exodus.svg" alt="Logo" className="h-8 w-auto" />
-              <span className="font-semibold">{BRAND.name}</span>
-            </div>
-            <p className="mt-3">
-              Addiction is not the end of the story. With the right support, a new beginning is possible.
-            </p>
-          </div>
+            <div>
+  <div className="flex items-center gap-3">
+    <div style={{ width: 40, height: 40, flex: '0 0 40px' }}>
+      <img
+        src="/logo-exodus.svg"
+        alt="Exodus Recovery"
+        style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
+      />
+    </div>
+    <span className="font-semibold">{BRAND.name}</span>
+  </div>
+  <p className="mt-3">
+    Addiction is not the end of the story. With the right support, a new beginning is possible.
+  </p>
+</div>
           <div className="grid grid-cols-2 gap-6">
             <div>
               <p className="font-medium text-slate-800">Navigate</p>
