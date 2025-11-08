@@ -1098,76 +1098,38 @@ export default function RehabWebsite() {
 
       {/* Footer */}
       <footer className="mt-10 border-t border-slate-200">
-        <div className="max-w-6xl mx-auto px-4 py-10 grid md:grid-cols-3 gap-6 text-sm text-slate-600">
-          <div>
-  <div className="flex items-center gap-4">
-  <img
-  src="/logo-exodus.svg"
-  alt="Exodus Recovery"
-  className="h-20 md:h-28 w-auto"
-  style={{ display: 'block' }}
-/>
-  <span className="font-semibold text-lg">{BRAND.name}</span>
-</div>
-    <span className="font-semibold">{BRAND.name}</span>
+  <div className="max-w-6xl mx-auto px-4 py-10 grid md:grid-cols-3 gap-6 text-sm text-slate-600">
+    <div>
+      <div className="flex items-center gap-3">
+        <img src="/logo-exodus.svg" alt="Exodus Recovery" className="h-20 md:h-28 w-auto" />
+        <span className="font-semibold">{BRAND.name}</span>
+      </div>
+      <p className="mt-3">Addiction is not the end of the story. With the right support, a new beginning is possible.</p>
+    </div>
+    <div className="grid grid-cols-2 gap-6">
+      <div>
+        <p className="font-medium text-slate-800">Navigate</p>
+        <ul className="mt-2 space-y-2">
+          <li><a className="hover:opacity-70" href="#about">About</a></li>
+          <li><a className="hover:opacity-70" href="#programs">Programs</a></li>
+          <li><a className="hover:opacity-70" href="#approach">Approach</a></li>
+          <li><a className="hover:opacity-70" href="#admissions">Admissions</a></li>
+        </ul>
+      </div>
+      <div>
+        <p className="font-medium text-slate-800">Help</p>
+        <ul className="mt-2 space-y-2">
+          <li><a className="hover:opacity-70" href="#testimonials">Stories</a></li>
+          <li><a className="hover:opacity-70" href="#contact">Contact</a></li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <p>© {new Date().getFullYear()} {BRAND.name}. A faith-based 501(c)(3) nonprofit. All rights reserved.</p>
+      <p className="mt-2">*Disclaimer: This site does not provide medical advice. In emergencies call 911.</p>
+    </div>
   </div>
-  <p className="mt-3">
-    Addiction is not the end of the story. With the right support, a new beginning is possible.
-  </p>
-</div>
-          <div className="grid grid-cols-2 gap-6">
-            <div>
-              <p className="font-medium text-slate-800">Navigate</p>
-              <ul className="mt-2 space-y-2">
-                <li>
-                  <a className="hover:opacity-70" href="#about">
-                    About
-                  </a>
-                </li>
-                <li>
-                  <a className="hover:opacity-70" href="#programs">
-                    Programs
-                  </a>
-                </li>
-                <li>
-                  <a className="hover:opacity-70" href="#approach">
-                    Approach
-                  </a>
-                </li>
-                <li>
-                  <a className="hover:opacity-70" href="#admissions">
-                    Admissions
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <p className="font-medium text-slate-800">Help</p>
-              <ul className="mt-2 space-y-2">
-                <li>
-                  <a className="hover:opacity-70" href="#testimonials">
-                    Stories
-                  </a>
-                </li>
-                <li>
-                  <a className="hover:opacity-70" href="#contact">
-                    Contact
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div>
-            <p>
-              © {new Date().getFullYear()} {BRAND.name}. A faith-based 501(c)(3) nonprofit. All
-              rights reserved.
-            </p>
-            <p className="mt-2">
-              *Disclaimer: This site does not provide medical advice. In emergencies call 911.
-            </p>
-          </div>
-        </div>
-      </footer>
+</footer>
 
       {/* Плавающая кнопка звонка */}
       <a href={`tel:${BRAND.phone}`} className="fixed right-4 bottom-4">
