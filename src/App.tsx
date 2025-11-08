@@ -705,7 +705,6 @@ export default function RehabWebsite() {
       </p>
 
      <div className="mt-6 grid gap-3 sm:grid-cols-2">
-  {/* Разовое пожертвование $50 */}<div className="mt-6 grid gap-3">
   {/* One-time: input amount + button */}
   <div className="flex gap-2 items-center justify-center">
     <Input
@@ -717,7 +716,6 @@ export default function RehabWebsite() {
     />
     <button
       onClick={() => {
-        // пытаемся преобразовать ввод; если пусто — откроем prompt как fallback
         let v = (oneTimeInput || "").toString().trim();
         if (!v) {
           const p = prompt("Enter donation amount in USD (e.g. 25):");
@@ -766,13 +764,13 @@ export default function RehabWebsite() {
   </div>
 </div>
 
-      <p className="mt-6 text-sm text-gray-500 leading-relaxed">
-        All donations are securely processed by Stripe. <br />
-        Thank you for partnering with us in this ministry.
-      </p>
-    </motion.div>
-  </div>
-</Section>
+<p className="mt-6 text-sm text-gray-500 leading-relaxed">
+  All donations are securely processed by Stripe. <br />
+  Thank you for partnering with us in this ministry.
+</p>
+      </motion.div>
+    </div>
+  </Section>
 
       {/* Programs */}
       <Section id="programs" title="Programs" subtitle="Multi-stage care tailored to your recovery journey.">
