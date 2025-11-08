@@ -1101,7 +1101,7 @@ export default function RehabWebsite() {
         <div className="max-w-6xl mx-auto px-4 py-10 grid md:grid-cols-3 gap-6 text-sm text-slate-600">
           <div>
             <div className="flex items-center gap-3">
-              <img src="/logo.svg" alt="Logo" className="h-8 w-auto" />
+              <img src="/logo-exodus.svg" alt="Logo" className="h-8 w-auto" />
               <span className="font-semibold">{BRAND.name}</span>
             </div>
             <p className="mt-3">
