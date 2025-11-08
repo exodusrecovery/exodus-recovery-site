@@ -263,76 +263,67 @@ const ContactForm = () => {
 
 export default function RehabWebsite() {
 // ------------------------- Stripe helpers (working implementation) -------------------------
+/**
+ * Новый блок Stripe helpers:
+ * - createCheckoutSession
+ * - openStripeInNewTab
+ *
+ * (вставлять именно этот код; импорт useState должен быть вверху компонента, он уже есть в основном файле)
+ */
 
-  const [oneTimeInput, setOneTimeInput] = useState<string>("");
-  const [selectedPriceId, setSelectedPriceId] = useState<string>("price_1SQdWEBrWBoIIHjWnOeeyFNE");
-
-  async function createCheckoutSession(payload: any): Promise<string> {
-    const res = await fetch("/api/create-checkout-session", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    if (!res.ok) {
-      const txt = await res.text().catch(() => "");
-      throw new Error(`create-checkout-session failed: ${res.status} ${txt}`);
-    }
-    const data = await res.json();
-    if (!data?.url) throw new Error(data?.error?.message || "Stripe error: no url in response");
-    return data.url;
+async function createCheckoutSession(payload: any): Promise<string> {
+  const res = await fetch("/api/create-checkout-session", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    let txt = "";
+    try { txt = await res.text(); } catch (_) { txt = ""; }
+    throw new Error(`create-checkout-session failed: ${res.status} ${txt}`);
   }
+  const data = await res.json();
+  if (!data?.url) throw new Error(data?.error?.message || "Stripe error: no url in response");
+  return data.url;
+}
 
-  function openStripeInNewTab(createSession: () => Promise<string>) {
-    const win = window.open("", "_blank", "noopener,noreferrer");
-    if (!win) {
-      createSession()
-        .then((url) => (window.location.href = url))
-        .catch((e) => alert(e.message || "Stripe error"));
-      return;
-    }
-
-    win.document.write("<p style='font:16px system-ui;margin:20px'>Redirecting to Stripe…</p>");
-
+/**
+ * Открывает новую вкладку и навигирует в неё, не меняя основное окно.
+ * Если popup заблокирован, делает fallback — навигация в основном окне.
+ */
+function openStripeInNewTab(createSession: () => Promise<string>) {
+  const win = window.open("", "_blank", "noopener,noreferrer");
+  if (!win) {
+    // Поп-up заблокирован — навигируем основную вкладку
     createSession()
-      .then((url) => {
-        try {
-          win.location.href = url;
-        } catch (err) {
-          win.close();
-          alert("Could not open Stripe Checkout.");
-        }
-      })
-      .catch((e) => {
-        win.close();
-        alert(e.message || "Stripe error");
-      });
+      .then((url) => { window.location.href = url; })
+      .catch((e) => { alert(e.message || "Stripe error"); });
+    return;
   }
 
-  const handleDonateOnce = () => {
-    const val = (oneTimeInput || "").toString().trim();
-    if (!val) { alert("Please enter an amount for one-time donation."); return; }
-    const cleaned = val.replace(/\$/g, "");
-    const num = Number(cleaned);
-    if (!Number.isFinite(num) || num <= 0) { alert("Enter a valid numeric amount."); return; }
-    const cents = Math.round(num * 100);
-    openStripeInNewTab(() =>
-      createCheckoutSession({
-        mode: "payment",
-        amount: cents,
-      })
-    );
-  };
+  // Показываем временную страницу в новой вкладке (чтобы не было пустого белого окна)
+  try {
+    win.document.write("<html><head><title>Redirecting…</title></head><body style='font-family: system-ui, -apple-system, Roboto, Arial; padding:20px;'><p>Redirecting to secure payment…</p></body></html>");
+    win.document.close();
+  } catch (e) {
+    // если выдаёт ошибку при доступе к document — продолжим без записи
+  }
 
-  const handleDonateMonthly = (priceId?: string) => {
-    const pid = priceId || selectedPriceId;
-    if (!pid) { alert("No subscription price selected."); return; }
-    openStripeInNewTab(() =>
-      createCheckoutSession({
-        mode: "subscription",
-        price_id: pid,
-      })
-    );
-  };
+  createSession()
+    .then((url) => {
+      try {
+        win.location.href = url;
+        try { win.focus(); } catch (_) {}
+      } catch (err) {
+        try { win.close(); } catch (_) {}
+        alert("Could not open Stripe Checkout in a new tab.");
+      }
+    })
+    .catch((e) => {
+      try { win.close(); } catch (_) {}
+      alert(e.message || "Stripe error");
+    });
+}
 
 // ------------------------- end Stripe helpers ------------------------------------------------
   const [showFeliks, setShowFeliks] = useState(false);
