@@ -1100,14 +1100,15 @@ export default function RehabWebsite() {
       <footer className="mt-10 border-t border-slate-200">
         <div className="max-w-6xl mx-auto px-4 py-10 grid md:grid-cols-3 gap-6 text-sm text-slate-600">
           <div>
-  <div className="flex items-center gap-3">
-    <div style={{ width: 40, height: 40, flex: '0 0 40px' }}>
-      <img
-        src="/logo-exodus.svg"
-        alt="Exodus Recovery"
-        style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
-      />
-    </div>
+  <div className="flex items-center gap-4">
+  <img
+  src="/logo-exodus.svg"
+  alt="Exodus Recovery"
+  className="h-20 md:h-28 w-auto"
+  style={{ display: 'block' }}
+/>
+  <span className="font-semibold text-lg">{BRAND.name}</span>
+</div>
     <span className="font-semibold">{BRAND.name}</span>
   </div>
   <p className="mt-3">
