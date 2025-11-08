@@ -263,75 +263,77 @@ const ContactForm = () => {
 
 export default function RehabWebsite() {
 // ------------------------- Stripe helpers (working implementation) -------------------------
-async function createCheckoutSession(payload: any): Promise<string> {
-  const res = await fetch("/api/create-checkout-session", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-  if (!res.ok) {
-    const txt = await res.text().catch(() => "");
-    throw new Error(`create-checkout-session failed: ${res.status} ${txt}`);
-  }
-  const data = await res.json();
-  if (!data?.url) throw new Error(data?.error?.message || "Stripe error: no url in response");
-  return data.url;
-}
 
-function openStripeInNewTab(createSession: () => Promise<string>) {
-  // open a blank tab (no noopener) so we can set its location later
-  const win = window.open("", "_blank");
-  if (!win) {
-    // fallback — navigate current tab
-    createSession()
-      .then((url) => (window.location.href = url))
-      .catch((e) => alert(e.message || "Stripe error"));
-    return;
-  }
+  const [oneTimeInput, setOneTimeInput] = useState<string>("");
+  const [selectedPriceId, setSelectedPriceId] = useState<string>("price_1SQdWEBrWBoIIHjWnOeeyFNE");
 
-  // try to show a small message in the new tab (best-effort)
-  try {
-    win.document.write("<p style=\'font:16px system-ui;margin:20px\'>Redirecting to Stripe…</p>");
-  } catch (err) {
-    // ignore
-  }
-
-  createSession()
-    .then((url) => {
-      try {
-        // try navigating the new tab
-        win.location.href = url;
-        try { win.opener = null; } catch (e) {}
-      } catch (err) {
-        // if not possible — close new tab and navigate current tab
-        try { win.close(); } catch (e) {}
-        window.location.href = url;
-      }
-    })
-    .catch((e) => {
-      try { win.close(); } catch (err) {}
-      alert(e.message || "Stripe error");
+  async function createCheckoutSession(payload: any): Promise<string> {
+    const res = await fetch("/api/create-checkout-session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
     });
-}
+    if (!res.ok) {
+      const txt = await res.text().catch(() => "");
+      throw new Error(`create-checkout-session failed: ${res.status} ${txt}`);
+    }
+    const data = await res.json();
+    if (!data?.url) throw new Error(data?.error?.message || "Stripe error: no url in response");
+    return data.url;
+  }
 
+  function openStripeInNewTab(createSession: () => Promise<string>) {
+    const win = window.open("", "_blank", "noopener,noreferrer");
+    if (!win) {
+      createSession()
+        .then((url) => (window.location.href = url))
+        .catch((e) => alert(e.message || "Stripe error"));
+      return;
+    }
 
-const handleDonateOnce = (amountCents: number) => {
-  openStripeInNewTab(() =>
-    createCheckoutSession({
-      mode: "payment",
-      amount: amountCents,
-    })
-  );
-};
+    win.document.write("<p style='font:16px system-ui;margin:20px'>Redirecting to Stripe…</p>");
 
-const handleDonateMonthly = (priceId: string = "price_1SQdWEBrWBoIIHjWnOeeyFNE") => {
-  openStripeInNewTab(() =>
-    createCheckoutSession({
-      mode: "subscription",
-      price_id: priceId,
-    })
-  );
-};
+    createSession()
+      .then((url) => {
+        try {
+          win.location.href = url;
+        } catch (err) {
+          win.close();
+          alert("Could not open Stripe Checkout.");
+        }
+      })
+      .catch((e) => {
+        win.close();
+        alert(e.message || "Stripe error");
+      });
+  }
+
+  const handleDonateOnce = () => {
+    const val = (oneTimeInput || "").toString().trim();
+    if (!val) { alert("Please enter an amount for one-time donation."); return; }
+    const cleaned = val.replace(/\$/g, "");
+    const num = Number(cleaned);
+    if (!Number.isFinite(num) || num <= 0) { alert("Enter a valid numeric amount."); return; }
+    const cents = Math.round(num * 100);
+    openStripeInNewTab(() =>
+      createCheckoutSession({
+        mode: "payment",
+        amount: cents,
+      })
+    );
+  };
+
+  const handleDonateMonthly = (priceId?: string) => {
+    const pid = priceId || selectedPriceId;
+    if (!pid) { alert("No subscription price selected."); return; }
+    openStripeInNewTab(() =>
+      createCheckoutSession({
+        mode: "subscription",
+        price_id: pid,
+      })
+    );
+  };
+
 // ------------------------- end Stripe helpers ------------------------------------------------
   const [showFeliks, setShowFeliks] = useState(false);
   const [activeVideo, setActiveVideo] = useState(0);
