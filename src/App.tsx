@@ -1100,7 +1100,6 @@ export default function RehabWebsite() {
       <footer className="mt-10 border-t border-slate-200">
         <div className="max-w-6xl mx-auto px-4 py-10 grid md:grid-cols-3 gap-6 text-sm text-slate-600">
           <div>
-            <div>
   <div className="flex items-center gap-3">
     <div style={{ width: 40, height: 40, flex: '0 0 40px' }}>
       <img
