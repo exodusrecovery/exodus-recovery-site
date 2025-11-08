@@ -292,14 +292,39 @@ async function createCheckoutSession(payload: any): Promise<string> {
  * Если popup заблокирован, делает fallback — навигация в основном окне.
  */
 function openStripeInNewTab(createSession: () => Promise<string>) {
-  const win = window.open("", "_blank", "noopener,noreferrer");
+  const win = window.open('', '_blank', 'noopener,noreferrer');
   if (!win) {
-    // Поп-up заблокирован — навигируем основную вкладку
     createSession()
-      .then((url) => { window.location.href = url; })
-      .catch((e) => { alert(e.message || "Stripe error"); });
+      .then((url) => window.location.assign(url))
+      .catch((e) => alert(e.message || 'Stripe error'));
     return;
   }
+
+  try {
+    win.document.write("<!doctype html><html><head><meta charset='utf-8'><title>Redirecting…</title></head><body style='font-family:system-ui;padding:24px;'><h3>Redirecting to secure payment…</h3><p>If nothing happens, <a id='openlink' href='#'>click here</a>.</p></body></html>");
+  } catch (err) {
+    try { win.close(); } catch (e) {}
+    createSession()
+      .then((url) => window.location.assign(url))
+      .catch((e) => alert(e.message || 'Stripe error'));
+    return;
+  }
+
+  createSession()
+    .then((url) => {
+      try {
+        win.location.href = url;
+      } catch (err) {
+        try { win.close(); } catch (e) {}
+        window.location.assign(url);
+      }
+    })
+    .catch((e) => {
+      try { win.close(); } catch (er) {}
+      alert(e.message || 'Stripe error');
+    });
+}
+
 
   // Показываем временную страницу в новой вкладке (чтобы не было пустого белого окна)
   try {
