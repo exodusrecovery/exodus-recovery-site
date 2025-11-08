@@ -1123,3 +1123,56 @@ export default function RehabWebsite() {
     </div>
   );
 }
+
+// Appended openStripeInNewTab implementation
+/* REPLACEMENT: openStripeInNewTab — вставлять вместо старой реализации */
+const openStripeInNewTab = async (createSession: () => Promise<{url?: string}>) : Promise<void> => {
+  // Попробуем открыть пустое окно немедленно — это уменьшает риск блокировки всплывающего окна.
+  let win: Window | null = null;
+  try {
+    win = window.open("", "_blank");
+  } catch (e) {
+    win = null;
+  }
+
+  try {
+    // Создаём сессию (запрос к API). createSession должен вернуть объект { url: "https://checkout..." }
+    const session = await createSession();
+    const url = session && session.url;
+
+    if (!url) {
+      // Если нет url — закроем вспомогательное окно и покажем ошибку
+      if (win) try { win.close(); } catch (_) {}
+      throw new Error("No checkout URL returned from server");
+    }
+
+    // Если у нас есть окно (не заблокировано) — навигируем его на Stripe Checkout
+    if (win) {
+      try {
+        // Попытка безопасно перенаправить новое окно (без редиректа основного окна)
+        win.location.href = url;
+        try { win.focus(); } catch (_) {}
+        return;
+      } catch (_) {
+        // если не удалось назначить location (редко) — попытаемся открыть ссылку стандартно
+        try { window.open(url, "_blank"); return; } catch (e) {}
+      }
+    }
+
+    // Если окно было заблокировано (win == null) — пробуем открыть checkout в новой вкладке
+    try {
+      window.open(url, "_blank");
+    } catch (e) {
+      // Последний резерв — уведомим пользователя и не трогаем основное окно
+      alert("Не удалось открыть окно оплаты. Пожалуйста, разрешите всплывающие окна или перейдите по ссылке: " + url);
+    }
+  } catch (err: any) {
+    // Ошибка при создании сессии
+    console.error("openStripeInNewTab error:", err);
+    if (win) try { win.close(); } catch (_) {}
+    const msg = (err && err.message) ? err.message : String(err);
+    alert("Ошибка инициации оплаты: " + msg);
+  }
+};
+export { openStripeInNewTab };
+
