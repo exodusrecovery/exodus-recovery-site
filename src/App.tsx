@@ -28,6 +28,7 @@ import { Link } from "react-router-dom";
 import Header from "@/components/Header";
 import { useRef } from "react";
 import { useInView, useAnimation } from "framer-motion";
+import { openStripeInNewTab } from './openStripeInNewTab';
 
 // ==== Motion presets ====
 const fadeInUp = {
@@ -704,23 +705,65 @@ export default function RehabWebsite() {
       </p>
 
      <div className="mt-6 grid gap-3 sm:grid-cols-2">
-  {/* Разовое пожертвование $50 */}
-<button
-  onClick={() => openStripeInNewTab(() => createCheckoutSession({ mode: "payment", amount: 5000 }))}
-  className="inline-block rounded-xl bg-black text-white px-6 py-3 font-semibold shadow-md hover:bg-gray-800 transition"
-  type="button"
->
-  One-time donation — $50
-</button>
+  {/* Разовое пожертвование $50 */}<div className="mt-6 grid gap-3">
+  {/* One-time: input amount + button */}
+  <div className="flex gap-2 items-center justify-center">
+    <Input
+      value={oneTimeInput}
+      onChange={(e) => setOneTimeInput(e.target.value)}
+      placeholder="Amount (e.g. 25)"
+      aria-label="One time amount"
+      className="w-40"
+    />
+    <button
+      onClick={() => {
+        // пытаемся преобразовать ввод; если пусто — откроем prompt как fallback
+        let v = (oneTimeInput || "").toString().trim();
+        if (!v) {
+          const p = prompt("Enter donation amount in USD (e.g. 25):");
+          if (!p) return;
+          v = p;
+        }
+        const cleaned = v.replace(/\$/g, "").replace(/,/g, "");
+        const n = Number(cleaned);
+        if (!Number.isFinite(n) || n <= 0) { alert("Enter a valid amount like 25"); return; }
+        const cents = Math.round(n * 100);
+        openStripeInNewTab(() => createCheckoutSession({ mode: "payment", amount: cents }));
+      }}
+      className="inline-block rounded-xl bg-black text-white px-6 py-3 font-semibold shadow-md hover:bg-gray-800 transition"
+      type="button"
+    >
+      One-time donation
+    </button>
+  </div>
 
-{/* Ежемесячная подписка $20 (подставь свой price id) */}
-<button
-  onClick={() => openStripeInNewTab(() => createCheckoutSession({ mode: "subscription", price_id: "price_1SQdWEBrWBoIIHjWnOeeyFNE" }))}
-  className="inline-block rounded-xl bg-[var(--brand)] text-white px-6 py-3 font-semibold shadow-md hover:bg-[var(--brand-dark)] transition"
-  type="button"
->
-  Subscribe — $20/mo
-</button>
+  {/* Subscription selector + button */}
+  <div className="mt-3 flex gap-2 items-center justify-center">
+    <select
+      value={selectedPriceId}
+      onChange={(e) => setSelectedPriceId(e.target.value)}
+      className="px-3 py-2 rounded-xl border"
+      aria-label="Select subscription amount"
+    >
+      <option value="price_1SQdWEBrWBoIIHjWnOeeyFNE">$20 / month</option>
+      <option value="price_1SQdWEBrWBoIIHjWpWfpPtzs">$50 / month</option>
+      <option value="price_1SQdWEBrWBoIIHjW4nXcPcBM">$100 / month</option>
+      <option value="price_1SQdWEBrWBoIIHjWnHMtdv84">$200 / month</option>
+      <option value="price_1SQdWEBrWBoIIHjWqHoNPT0i">$500 / month</option>
+    </select>
+
+    <button
+      onClick={() => {
+        const pid = selectedPriceId;
+        if (!pid) { alert("Select a subscription plan"); return; }
+        openStripeInNewTab(() => createCheckoutSession({ mode: "subscription", price_id: pid }));
+      }}
+      className="inline-block rounded-xl bg-[var(--brand)] text-white px-6 py-3 font-semibold shadow-md hover:bg-[var(--brand-dark)] transition"
+      type="button"
+    >
+      Subscribe
+    </button>
+  </div>
 </div>
 
       <p className="mt-6 text-sm text-gray-500 leading-relaxed">
@@ -1125,54 +1168,3 @@ export default function RehabWebsite() {
 }
 
 // Appended openStripeInNewTab implementation
-/* REPLACEMENT: openStripeInNewTab — вставлять вместо старой реализации */
-const openStripeInNewTab = async (createSession: () => Promise<{url?: string}>) : Promise<void> => {
-  // Попробуем открыть пустое окно немедленно — это уменьшает риск блокировки всплывающего окна.
-  let win: Window | null = null;
-  try {
-    win = window.open("", "_blank");
-  } catch (e) {
-    win = null;
-  }
-
-  try {
-    // Создаём сессию (запрос к API). createSession должен вернуть объект { url: "https://checkout..." }
-    const session = await createSession();
-    const url = session && session.url;
-
-    if (!url) {
-      // Если нет url — закроем вспомогательное окно и покажем ошибку
-      if (win) try { win.close(); } catch (_) {}
-      throw new Error("No checkout URL returned from server");
-    }
-
-    // Если у нас есть окно (не заблокировано) — навигируем его на Stripe Checkout
-    if (win) {
-      try {
-        // Попытка безопасно перенаправить новое окно (без редиректа основного окна)
-        win.location.href = url;
-        try { win.focus(); } catch (_) {}
-        return;
-      } catch (_) {
-        // если не удалось назначить location (редко) — попытаемся открыть ссылку стандартно
-        try { window.open(url, "_blank"); return; } catch (e) {}
-      }
-    }
-
-    // Если окно было заблокировано (win == null) — пробуем открыть checkout в новой вкладке
-    try {
-      window.open(url, "_blank");
-    } catch (e) {
-      // Последний резерв — уведомим пользователя и не трогаем основное окно
-      alert("Не удалось открыть окно оплаты. Пожалуйста, разрешите всплывающие окна или перейдите по ссылке: " + url);
-    }
-  } catch (err: any) {
-    // Ошибка при создании сессии
-    console.error("openStripeInNewTab error:", err);
-    if (win) try { win.close(); } catch (_) {}
-    const msg = (err && err.message) ? err.message : String(err);
-    alert("Ошибка инициации оплаты: " + msg);
-  }
-};
-export { openStripeInNewTab };
-
