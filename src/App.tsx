@@ -325,17 +325,37 @@ export default function RehabWebsite() {
     );
   };
 
-  const handleDonateMonthly = (priceId?: string) => {
-    const pid = priceId || selectedPriceId;
-    if (!pid) { alert("No subscription price selected."); return; }
+  const handleDonateMonthly = (amount: number) => {
+  let priceId;
 
-    openStripeInNewTab(() =>
-      createCheckoutSession({
-        mode: "subscription",
-        price_id: pid,
-      })
-    );
-  };
+  switch (amount) {
+    case 25:
+      priceId = process.env.STRIPE_PRICE_25;
+      break;
+    case 50:
+      priceId = process.env.STRIPE_PRICE_50;
+      break;
+    case 100:
+      priceId = process.env.STRIPE_PRICE_100;
+      break;
+    case 200:
+      priceId = process.env.STRIPE_PRICE_200;
+      break;
+    case 500:
+      priceId = process.env.STRIPE_PRICE_500;
+      break;
+    default:
+      alert("No price selected");
+      return;
+  }
+
+  openStripeInNewTab(() =>
+    createCheckoutSession({
+      mode: "subscription",
+      price_id: priceId,
+    })
+  );
+};
 // ------------------------- end Stripe helpers ------------------------------------------------
   const [showFeliks, setShowFeliks] = useState(false);
   const [activeVideo, setActiveVideo] = useState(0);
@@ -755,16 +775,16 @@ export default function RehabWebsite() {
                 onChange={(e) => setSelectedPriceId(e.target.value)}
                 className="px-3 py-2 rounded-xl border w-full"
               >
-                <option value="price_1SQdWEBrWBoIIHjWnOeeyFNE">$20 / month</option>
-                <option value="price_1SQdWEBrWBoIIHjWpWfpPtzs">$50 / month</option>
-                <option value="price_1SQdWEBrWBoIIHjW4nXcPcBM">$100 / month</option>
-                <option value="price_1SQdWEBrWBoIIHjWnHMtdv84">$200 / month</option>
-                <option value="price_1SQdWEBrWBoIIHjWqHoNPT0i">$500 / month</option>
+                <option value="25">$25 / month</option>
+                <option value="50">$50 / month</option>
+                <option value="100">$100 / month</option>
+                <option value="200">$200 / month</option>
+                <option value="500">$500 / month</option>
               </select>
 
               <button
                 type="button"
-                onClick={() => handleDonateMonthly()}
+                onClick={() => handleDonateMonthly(Number(selectedPriceId))}
                 className="whitespace-nowrap rounded-xl bg-black text-white px-4 py-2 font-semibold shadow hover:bg-gray-800 transition"
               >
                 Subscribe
