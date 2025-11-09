@@ -325,16 +325,13 @@ export default function RehabWebsite() {
     );
   };
 
-  const handleDonateMonthly = (amount: string | number) => {
-  const amt = typeof amount === "string" ? Number(amount) : amount;
-
-  if (!Number.isFinite(amt)) {
+  const handleDonateMonthly = (priceId: string) => {
+  if (!priceId) {
     alert("No price selected");
     return;
   }
 
   let priceId: string | undefined;
-
   switch (amt) {
     case 25:
       priceId = import.meta.env.VITE_STRIPE_PRICE_25;
@@ -356,6 +353,13 @@ export default function RehabWebsite() {
       return;
   }
 
+  if (!priceId) {
+    alert("Price ID not configured on this environment.");
+    console.error("Missing VITE_STRIPE_PRICE for amount:", amt);
+    return;
+  }
+
+  console.log("Resolved price id for", amt, "=>", priceId);
   openStripeInNewTab(() =>
     createCheckoutSession({
       mode: "subscription",
@@ -782,8 +786,6 @@ export default function RehabWebsite() {
   onChange={(e) => setSelectedPriceId(e.target.value)}
   className="px-3 py-2 rounded-xl border w-full"
 >
-  <option value="">Select amount...</option>
-
   <option value="price_1SQdWEBrWBoIIHjWnOeeyFNE">$25 / month</option>
   <option value="price_1SQdWEBrWBoIIHjWpWfpPtzs">$50 / month</option>
   <option value="price_1SQdWEBrWBoIIHjW4nXcPcBM">$100 / month</option>
@@ -793,13 +795,7 @@ export default function RehabWebsite() {
 
 <button
   type="button"
-  onClick={() => {
-    if (!selectedPriceId) {
-      alert("Please select a monthly donation amount");
-      return;
-    }
-    handleDonateMonthly(selectedPriceId);
-  }}
+  onClick={() => handleDonateMonthly(selectedPriceId)}
   className="whitespace-nowrap rounded-xl bg-black text-white px-4 py-2 font-semibold shadow hover:bg-gray-800 transition"
 >
   Subscribe
