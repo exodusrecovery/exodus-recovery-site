@@ -325,45 +325,45 @@ export default function RehabWebsite() {
     );
   };
 
-  const handleDonateMonthly = (priceId: string) => {
-  if (!priceId) {
-    alert("No price selected");
+  const handleDonateMonthly = (priceOrAmount: string | number) => {
+  let resolvedPriceId: string | undefined;
+
+  if (typeof priceOrAmount === "string" && priceOrAmount.startsWith("price_")) {
+    resolvedPriceId = priceOrAmount;
+  } else {
+    const amt = typeof priceOrAmount === "string" ? Number(priceOrAmount) : priceOrAmount;
+
+    switch (amt) {
+      case 25:
+        resolvedPriceId = import.meta.env.VITE_STRIPE_PRICE_25;
+        break;
+      case 50:
+        resolvedPriceId = import.meta.env.VITE_STRIPE_PRICE_50;
+        break;
+      case 100:
+        resolvedPriceId = import.meta.env.VITE_STRIPE_PRICE_100;
+        break;
+      case 200:
+        resolvedPriceId = import.meta.env.VITE_STRIPE_PRICE_200;
+        break;
+      case 500:
+        resolvedPriceId = import.meta.env.VITE_STRIPE_PRICE_500;
+        break;
+      default:
+        alert("No price selected");
+        return;
+    }
+  }
+
+  if (!resolvedPriceId) {
+    alert("Price ID not configured");
     return;
   }
 
-  let priceId: string | undefined;
-  switch (amt) {
-    case 25:
-      priceId = import.meta.env.VITE_STRIPE_PRICE_25;
-      break;
-    case 50:
-      priceId = import.meta.env.VITE_STRIPE_PRICE_50;
-      break;
-    case 100:
-      priceId = import.meta.env.VITE_STRIPE_PRICE_100;
-      break;
-    case 200:
-      priceId = import.meta.env.VITE_STRIPE_PRICE_200;
-      break;
-    case 500:
-      priceId = import.meta.env.VITE_STRIPE_PRICE_500;
-      break;
-    default:
-      alert("No price selected");
-      return;
-  }
-
-  if (!priceId) {
-    alert("Price ID not configured on this environment.");
-    console.error("Missing VITE_STRIPE_PRICE for amount:", amt);
-    return;
-  }
-
-  console.log("Resolved price id for", amt, "=>", priceId);
   openStripeInNewTab(() =>
     createCheckoutSession({
       mode: "subscription",
-      price_id: priceId,
+      price_id: resolvedPriceId,
     })
   );
 };
