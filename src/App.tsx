@@ -325,24 +325,31 @@ export default function RehabWebsite() {
     );
   };
 
-  const handleDonateMonthly = (amount: number) => {
-  let priceId;
+  const handleDonateMonthly = (amount: string | number) => {
+  const amt = typeof amount === "string" ? Number(amount) : amount;
 
-  switch (amount) {
+  if (!Number.isFinite(amt)) {
+    alert("No price selected");
+    return;
+  }
+
+  let priceId: string | undefined;
+
+  switch (amt) {
     case 25:
-      priceId = process.env.STRIPE_PRICE_25;
+      priceId = import.meta.env.VITE_STRIPE_PRICE_25;
       break;
     case 50:
-      priceId = process.env.STRIPE_PRICE_50;
+      priceId = import.meta.env.VITE_STRIPE_PRICE_50;
       break;
     case 100:
-      priceId = process.env.STRIPE_PRICE_100;
+      priceId = import.meta.env.VITE_STRIPE_PRICE_100;
       break;
     case 200:
-      priceId = process.env.STRIPE_PRICE_200;
+      priceId = import.meta.env.VITE_STRIPE_PRICE_200;
       break;
     case 500:
-      priceId = process.env.STRIPE_PRICE_500;
+      priceId = import.meta.env.VITE_STRIPE_PRICE_500;
       break;
     default:
       alert("No price selected");
