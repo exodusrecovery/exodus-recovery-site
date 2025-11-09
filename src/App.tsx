@@ -771,24 +771,32 @@ export default function RehabWebsite() {
 
             <div className="flex items-center gap-3 w-full mt-4">
               <select
-                value={selectedPriceId}
-                onChange={(e) => setSelectedPriceId(e.target.value)}
-                className="px-3 py-2 rounded-xl border w-full"
-              >
-                <option value="25">$25 / month</option>
-                <option value="50">$50 / month</option>
-                <option value="100">$100 / month</option>
-                <option value="200">$200 / month</option>
-                <option value="500">$500 / month</option>
-              </select>
+  value={selectedPriceId}
+  onChange={(e) => setSelectedPriceId(e.target.value)}
+  className="px-3 py-2 rounded-xl border w-full"
+>
+  <option value="">Select amount...</option>
 
-              <button
-                type="button"
-                onClick={() => handleDonateMonthly(Number(selectedPriceId))}
-                className="whitespace-nowrap rounded-xl bg-black text-white px-4 py-2 font-semibold shadow hover:bg-gray-800 transition"
-              >
-                Subscribe
-              </button>
+  <option value="price_1SQdWEBrWBoIIHjWnOeeyFNE">$25 / month</option>
+  <option value="price_1SQdWEBrWBoIIHjWpWfpPtzs">$50 / month</option>
+  <option value="price_1SQdWEBrWBoIIHjW4nXcPcBM">$100 / month</option>
+  <option value="price_1SQdWEBrWBoIIHjWnHMtdv84">$200 / month</option>
+  <option value="price_1SQdWEBrWBoIIHjWqHoNPT0i">$500 / month</option>
+</select>
+
+<button
+  type="button"
+  onClick={() => {
+    if (!selectedPriceId) {
+      alert("Please select a monthly donation amount");
+      return;
+    }
+    handleDonateMonthly(selectedPriceId);
+  }}
+  className="whitespace-nowrap rounded-xl bg-black text-white px-4 py-2 font-semibold shadow hover:bg-gray-800 transition"
+>
+  Subscribe
+</button>
             </div>
           </div>
         </div>
