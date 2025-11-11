@@ -1,123 +1,44 @@
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { ArrowRight } from "lucide-react";
+import nodemailer from "nodemailer";
 
-export default function ContactForm(): React.ReactElement {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [message, setMessage] = useState("");
-  const [sending, setSending] = useState(false);
+export default async function handler(req: any, res: any) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method Not Allowed" });
+  }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const { name, email, phone, message } = req.body || {};
+  if (!name || !email || !message) {
+    return res.status(400).json({ error: "Missing fields" });
+  }
 
-    if (!name || !email || !message) {
-      alert("Заполните имя, email и сообщение.");
-      return;
-    }
+  const transporter = nodemailer.createTransport({
+    host: process.env.ZOHO_SMTP_HOST || "smtppro.zoho.com",
+    port: Number(process.env.ZOHO_SMTP_PORT || 465),
+    secure: true, // SSL
+    auth: {
+      user: process.env.ZOHO_SMTP_USER,
+      pass: process.env.ZOHO_SMTP_PASS,
+    },
+  });
 
-    setSending(true);
-    try {
-      const res = await fetch("/api/send-contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, phone, message }),
-      });
+  try {
+    await transporter.verify();
+    console.log("SMTP verify: OK");
+  } catch (err: any) {
+    console.error("SMTP verify failed:", err.message);
+    return res.status(500).json({ error: "SMTP connection failed" });
+  }
 
-      if (res.ok) {
-        setName("");
-        setEmail("");
-        setPhone("");
-        setMessage("");
-        alert("Сообщение отправлено!");
-      } else {
-        const data = await res.json();
-        alert("Ошибка: " + (data?.error || "send failed"));
-      }
-    } catch (err: any) {
-      alert("Ошибка отправки: " + (err?.message || "Попробуйте позже"));
-    } finally {
-      setSending(false);
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit}>
-      <Card className="rounded-2xl shadow-sm">
-        <CardHeader>
-          <CardTitle>Contact us</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Your name</label>
-              <Input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="John Smith"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Email</label>
-              <Input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                required
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">Phone</label>
-            <Input
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="+1 (555) 123-4567"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">Message</label>
-            <Textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              rows={5}
-              placeholder="Briefly describe your situation"
-              required
-            />
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <Button
-              type="submit"
-              disabled={sending}
-              className="rounded-xl px-6 text-base flex items-center"
-              style={{ background: "#2d2846", color: "white" }}
-            >
-              {sending ? "Отправка..." : "Send request"}
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-
-            <div className="text-sm text-slate-600">
-              or call{" "}
-              <a
-                className="underline"
-                href={`tel:${import.meta.env.VITE_PHONE || ""}`}
-              >
-                {import.meta.env.VITE_PHONE || ""}
-              </a>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </form>
-  );
+  try {
+    await transporter.sendMail({
+      from: process.env.ZOHO_SMTP_USER,
+      to: process.env.CONTACT_TO_EMAIL || process.env.ZOHO_SMTP_USER,
+      subject: `Contact from ${name}`,
+      text: `From: ${name} <${email}>\n${phone ? "Phone: " + phone + "\n" : ""}\n${message}`,
+      html: `<p><strong>From:</strong> ${name} &lt;${email}&gt;</p>${phone ? `<p><strong>Phone:</strong> ${phone}</p>` : ""}<p>${message.replace(/\n/g, "<br>")}</p>`,
+    });
+    return res.status(200).json({ ok: true });
+  } catch (err: any) {
+    console.error("Send failed:", err.message);
+    return res.status(500).json({ error: "Failed to send email" });
+  }
 }
