@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import ContactForm from "@/components/ContactForm";
+import ContactForm from "@/components/ContactForm";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import BeforeAfter from "@/components/BeforeAfter";
