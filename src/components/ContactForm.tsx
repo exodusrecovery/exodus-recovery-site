@@ -22,11 +22,10 @@ export default function ContactForm(): React.ReactElement {
 
     setSending(true);
     try {
-      const payload = { name, email, phone, message };
       const res = await fetch("/api/send-contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ name, email, phone, message }),
       });
 
       if (res.ok) {
@@ -36,11 +35,11 @@ export default function ContactForm(): React.ReactElement {
         setMessage("");
         alert("Сообщение отправлено!");
       } else {
-        const data = await res.json().catch(() => ({ error: "unknown" }));
+        const data = await res.json();
         alert("Ошибка: " + (data?.error || "send failed"));
       }
     } catch (err: any) {
-      alert("Ошибка отправки: " + (err?.message || String(err)));
+      alert("Ошибка отправки: " + (err?.message || "Попробуйте позже"));
     } finally {
       setSending(false);
     }
