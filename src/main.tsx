@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import App from "./App.fixed";
+import App from "./App";
 import VideoPage from "./VideoPage";
 import GalleryPage from "./pages/GalleryPage";
 import DonateSuccess from "./pages/DonateSuccess";   // ✅ добавь
