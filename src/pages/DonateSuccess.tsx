@@ -22,7 +22,7 @@ export default function DonateSuccess() {
             На главную
           </Link>
           <a
-            href="mailto:info@exodusrecovery.org"
+            href="#contact"
             className="rounded-xl border border-slate-300 px-6 py-3 font-semibold text-slate-900 hover:bg-white"
           >
             Нужна помощь?

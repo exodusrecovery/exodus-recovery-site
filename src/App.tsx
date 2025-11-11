@@ -180,86 +180,123 @@ const ProgramCard = ({ icon: Icon, title, points }: any) => (
 );
 
 // Форма связи (mailto)
-const ContactForm = () => {
+import React, { useState } from "react";
+import { Card, CardHeader, CardTitle, CardContent } from "./ui/card"; // пример путей — оставь свои импорты
+import { Input } from "./ui/input";
+import { Textarea } from "./ui/textarea";
+import { Button } from "./ui/button";
+import { ArrowRight } from "lucide-react"; // если у тебя нет — убери иконку
+
+const ContactForm: React.FC = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");      // ← добавили телефон
+  const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
+  const [sending, setSending] = useState(false);
 
-  const mailto = () => {
-    const subject = encodeURIComponent(`[Inquiry] ${name}`);
-    const body = encodeURIComponent(
-      `Name: ${name}\nEmail: ${email}\nPhone: ${phone}\n\nMessage:\n${message}`
-    );
-    return `mailto:${BRAND.email}?subject=${subject}&body=${body}`;
-  };
+  async function submitContact(e?: React.FormEvent) {
+    if (e) e.preventDefault();
+    if (!name || !email || !message) {
+      alert("Пожалуйста заполните имя, email и сообщение.");
+      return;
+    }
+    setSending(true);
+    try {
+      const payload = { name, email, phone, message };
+      const res = await fetch("/api/send-contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        alert("Сообщение отправлено.");
+        setName("");
+        setEmail("");
+        setPhone("");
+        setMessage("");
+      } else {
+        const data = await res.json().catch(() => ({ error: "unknown" }));
+        alert("Ошибка: " + (data?.error || "send failed"));
+      }
+    } catch (err: any) {
+      alert("Ошибка отправки: " + (err?.message || String(err)));
+    } finally {
+      setSending(false);
+    }
+  }
 
   return (
-    <Card className="rounded-2xl shadow-sm">
-      <CardHeader>
-        <CardTitle>Contact us</CardTitle>
-      </CardHeader>
-      <CardContent className="grid gap-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Your name</label>
-            <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="John Smith"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Email</label>
-            <Input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-            />
+    <form onSubmit={submitContact}>
+      <Card className="rounded-2xl shadow-sm">
+        <CardHeader>
+          <CardTitle>Contact us</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Your name</label>
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="John Smith"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Email</label>
+              <Input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium mb-1">Phone</label>
+              <Input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="+1 (555) 123-4567"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium mb-1">Message</label>
+              <Textarea
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                rows={5}
+                placeholder="Briefly describe your situation"
+              />
+            </div>
           </div>
 
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium mb-1">Phone</label>
-            <Input
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="+1 (555) 123-4567"
-            />
-          </div>
-
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium mb-1">Message</label>
-            <Textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              rows={5}
-              placeholder="Briefly describe your situation"
-            />
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-3">
-          <a href={mailto()}>
+          <div className="flex flex-wrap items-center gap-3">
             <Button
+              type="submit"
               className="rounded-xl px-6 text-base"
-              style={{ background: BRAND.colors.primary }}
+              style={{ background: "#2d2846", color: "white" }}
+              disabled={sending}
             >
-              Send request <ArrowRight className="ml-2 h-5 w-5" />
+              {sending ? "Sending..." : "Send request"}
+              <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
-          </a>
-          <div className="text-sm text-slate-600">
-            or call{" "}
-            <a className="underline" href={`tel:${BRAND.phone}`}>
-              {BRAND.phone}
-            </a>
+
+            <div className="text-sm text-slate-600">
+              or call{" "}
+              <a className="underline" href={`tel:${process.env.REACT_APP_BRAND_PHONE || "123-456-7890"}`}>
+                {process.env.REACT_APP_BRAND_PHONE || "123-456-7890"}
+              </a>
+            </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </form>
   );
 };
+
+export default ContactForm;
 
 export default function RehabWebsite() {
 // ------------------------- Stripe helpers (working implementation) -------------------------
