@@ -181,120 +181,87 @@ const ProgramCard = ({ icon: Icon, title, points }: any) => (
 
 // Форма связи (mailto)
 import React, { useState } from "react";
-import { Card, CardHeader, CardTitle, CardContent } from "./ui/card"; // пример путей — оставь свои импорты
-import { Input } from "./ui/input";
-import { Textarea } from "./ui/textarea";
-import { Button } from "./ui/button";
-import { ArrowRight } from "lucide-react"; // если у тебя нет — убери иконку
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { ArrowRight } from "lucide-react";
 
-const ContactForm: React.FC = () => {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [message, setMessage] = useState("");
-  const [sending, setSending] = useState(false);
+// Only ONE default export!
+export default function RehabWebsite() {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    message: ""
+  });
 
-  async function submitContact(e?: React.FormEvent) {
-    if (e) e.preventDefault();
-    if (!name || !email || !message) {
-      alert("Пожалуйста заполните имя, email и сообщение.");
-      return;
-    }
-    setSending(true);
-    try {
-      const payload = { name, email, phone, message };
-      const res = await fetch("/api/send-contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (res.ok) {
-        alert("Сообщение отправлено.");
-        setName("");
-        setEmail("");
-        setPhone("");
-        setMessage("");
-      } else {
-        const data = await res.json().catch(() => ({ error: "unknown" }));
-        alert("Ошибка: " + (data?.error || "send failed"));
-      }
-    } catch (err: any) {
-      alert("Ошибка отправки: " + (err?.message || String(err)));
-    } finally {
-      setSending(false);
-    }
-  }
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log("Form submitted:", formData);
+    // Add submission logic
+  };
 
   return (
-    <form onSubmit={submitContact}>
-      <Card className="rounded-2xl shadow-sm">
-        <CardHeader>
-          <CardTitle>Contact us</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Your name</label>
-              <Input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="John Smith"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Email</label>
-              <Input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-              />
-            </div>
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white p-4">
+      <div className="max-w-4xl mx-auto pt-12">
+        <Card className="shadow-xl">
+          <CardHeader>
+            <CardTitle className="text-3xl font-bold text-center text-blue-900">
+              Exodus Recovery Center
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium mb-2">Name</label>
+                <Input
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  placeholder="John Doe"
+                  required
+                />
+              </div>
 
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium mb-1">Phone</label>
-              <Input
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="+1 (555) 123-4567"
-              />
-            </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Email</label>
+                <Input
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="john@example.com"
+                  required
+                />
+              </div>
 
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium mb-1">Message</label>
-              <Textarea
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                rows={5}
-                placeholder="Briefly describe your situation"
-              />
-            </div>
-          </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Message</label>
+                <Textarea
+                  name="message"
+                  value={formData.message}
+                  onChange={handleChange}
+                  placeholder="Tell us how we can help..."
+                  rows={5}
+                  required
+                />
+              </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <Button
-              type="submit"
-              className="rounded-xl px-6 text-base"
-              style={{ background: "#2d2846", color: "white" }}
-              disabled={sending}
-            >
-              {sending ? "Sending..." : "Send request"}
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-
-            <div className="text-sm text-slate-600">
-              or call{" "}
-              <a className="underline" href={`tel:${process.env.REACT_APP_BRAND_PHONE || "123-456-7890"}`}>
-                {process.env.REACT_APP_BRAND_PHONE || "123-456-7890"}
-              </a>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </form>
+              <Button type="submit" className="w-full group">
+                Send Message
+                <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition" />
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
-};
+}
 
 export default ContactForm;
 
