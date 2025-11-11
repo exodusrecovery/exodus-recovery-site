@@ -1,0 +1,1 @@
+import { describe, it, expect } from '@jest/globals'; describe('Website', () => { it('returns 200', async () => { const res = await fetch('https://www.exodusrecovery.org'); expect(res.status).toBe(200); }, 10000); });
