@@ -1,8 +1,17 @@
 {
   "version": 2,
   "builds": [
-    { "src": "vite.config.ts", "use": "@vercel/vite" },
-    { "src": "api/send-contact.ts", "use": "@vercel/node" }
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    },
+    {
+      "src": "api/send-contact.ts",
+      "use": "@vercel/node"
+    }
   ],
   "routes": [
     {
@@ -15,7 +24,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "/"
+      "dest": "/index.html"
     }
   ]
 }
