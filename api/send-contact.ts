@@ -1,7 +1,4 @@
 // api/send-contact.ts
-import dotenv from "dotenv";
-dotenv.config({ path: ".env.local" });
-
 import nodemailer from "nodemailer";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
