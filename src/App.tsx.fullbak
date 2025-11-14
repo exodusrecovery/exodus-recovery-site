@@ -188,6 +188,7 @@ const ProgramCard = ({ icon: Icon, title, points }: any) => (
     message: ""
   });
   const [loading, setLoading] = useState(false);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -1041,26 +1042,66 @@ export default function RehabWebsite() {
       {/* Contact */}
 <Section id="contact" title="Contact">
   <div className="grid md:grid-cols-2 gap-6 items-start">
-    {/* Left: Contact Form */}
+    {/* Обновлённая форма с телефоном */}
     <Card className="rounded-2xl shadow-sm">
       <CardHeader>
         <CardTitle>Contact us</CardTitle>
       </CardHeader>
-
       <CardContent className="grid gap-4">
-        {/* 💥 НАСТОЯЩАЯ РАБОЧАЯ ФОРМА */}
-        <ContactForm />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">Your name</label>
+            <Input
+              type="text"
+              placeholder="John Smith"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Email</label>
+            <Input
+              type="email"
+              placeholder="you@example.com"
+            />
+          </div>
+        </div>
 
-        <div className="text-sm text-slate-600">
-          or call{" "}
-          <a className="underline" href={`tel:${BRAND.phone}`}>
-            {BRAND.phone}
+        {/* Новое поле телефона */}
+        <div>
+          <label className="block text-sm font-medium mb-1">Phone number</label>
+          <Input
+            type="tel"
+            placeholder="+1 (555) 123-4567"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">Message</label>
+          <Textarea
+            rows={5}
+            placeholder="Briefly describe your situation"
+          />
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <a href={`mailto:${BRAND.email}`}>
+            <Button
+              className="rounded-xl px-6 text-base"
+              style={{ background: BRAND.colors.primary }}
+            >
+              Send message <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
           </a>
+          <div className="text-sm text-slate-600">
+            or call{" "}
+            <a className="underline" href={`tel:${BRAND.phone}`}>
+              {BRAND.phone}
+            </a>
+          </div>
         </div>
       </CardContent>
     </Card>
 
-    {/* Right: Find us */}
+    {/* Find us — без карты */}
     <Card className="rounded-2xl shadow-sm">
       <CardHeader>
         <CardTitle>Find us</CardTitle>

@@ -1,44 +1,73 @@
-import nodemailer from "nodemailer";
+// src/components/ContactForm.tsx
+import React, { useState } from "react";
 
-export default async function handler(req: any, res: any) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method Not Allowed" });
+export default function ContactForm(): React.ReactElement {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function submitContact(e: React.FormEvent) {
+    e.preventDefault();
+    if (!name || !email || !message) {
+      alert("Пожалуйста, заполните имя, email и сообщение.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const payload = { name, email, phone, message };
+      const endpoint = `${window.location.origin}/api/send-contact`;
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        setName("");
+        setEmail("");
+        setPhone("");
+        setMessage("");
+        alert("Сообщение отправлено.");
+      } else {
+        const data = await res.json().catch(() => ({ error: "unknown" }));
+        alert("Ошибка: " + (data?.error || "send failed"));
+      }
+    } catch (err: any) {
+      alert("Ошибка отправки: " + (err?.message || err));
+    } finally {
+      setLoading(false);
+    }
   }
 
-  const { name, email, phone, message } = req.body || {};
-  if (!name || !email || !message) {
-    return res.status(400).json({ error: "Missing fields" });
-  }
+  return (
+    <form onSubmit={submitContact} className="space-y-4" aria-label="Contact form">
+      <div>
+        <label className="block text-sm font-medium mb-1">Ваше имя</label>
+        <input className="w-full rounded-md border px-3 py-2" value={name} onChange={(e) => setName(e.target.value)} placeholder="Иван Иванов" required />
+      </div>
 
-  const transporter = nodemailer.createTransport({
-    host: process.env.ZOHO_SMTP_HOST || "smtppro.zoho.com",
-    port: Number(process.env.ZOHO_SMTP_PORT || 465),
-    secure: true, // SSL
-    auth: {
-      user: process.env.ZOHO_SMTP_USER,
-      pass: process.env.ZOHO_SMTP_PASS,
-    },
-  });
+      <div>
+        <label className="block text-sm font-medium mb-1">Email</label>
+        <input type="email" className="w-full rounded-md border px-3 py-2" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" required />
+      </div>
 
-  try {
-    await transporter.verify();
-    console.log("SMTP verify: OK");
-  } catch (err: any) {
-    console.error("SMTP verify failed:", err.message);
-    return res.status(500).json({ error: "SMTP connection failed" });
-  }
+      <div>
+        <label className="block text-sm font-medium mb-1">Телефон (необязательно)</label>
+        <input type="tel" className="w-full rounded-md border px-3 py-2" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+1 (555) 123-4567" />
+      </div>
 
-  try {
-    await transporter.sendMail({
-      from: process.env.ZOHO_SMTP_USER,
-      to: process.env.CONTACT_TO_EMAIL || process.env.ZOHO_SMTP_USER,
-      subject: `Contact from ${name}`,
-      text: `From: ${name} <${email}>\n${phone ? "Phone: " + phone + "\n" : ""}\n${message}`,
-      html: `<p><strong>From:</strong> ${name} &lt;${email}&gt;</p>${phone ? `<p><strong>Phone:</strong> ${phone}</p>` : ""}<p>${message.replace(/\n/g, "<br>")}</p>`,
-    });
-    return res.status(200).json({ ok: true });
-  } catch (err: any) {
-    console.error("Send failed:", err.message);
-    return res.status(500).json({ error: "Failed to send email" });
-  }
+      <div>
+        <label className="block text-sm font-medium mb-1">Сообщение</label>
+        <textarea className="w-full rounded-md border px-3 py-2" value={message} onChange={(e) => setMessage(e.target.value)} rows={5} placeholder="Опишите вашу ситуацию" required />
+      </div>
+
+      <div className="flex items-center gap-3">
+        <button type="submit" disabled={loading} className="rounded-xl bg-[#2d2846] text-white px-6 py-2 font-semibold hover:opacity-90">
+          {loading ? "Отправка..." : "Отправить"}
+        </button>
+      </div>
+    </form>
+  );
 }
