@@ -50,14 +50,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   });
 
   try {
-    await transporter.verify();
-    console.log(tag, "transporter.verify: OK");
-  } catch (vErr: any) {
-    console.error(tag, "transporter.verify failed:", vErr && vErr.message ? vErr.message : vErr);
-    return res.status(502).json({ error: "Mail server verify failed", detail: String(vErr?.message || vErr) });
-  }
-
-  try {
     await transporter.sendMail({
       from: smtpUser,
       to: contactTo,
