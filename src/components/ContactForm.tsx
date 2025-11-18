@@ -11,13 +11,13 @@ export default function ContactForm(): React.ReactElement {
   async function submitContact(e: React.FormEvent) {
     e.preventDefault();
     if (!name || !email || !message) {
-      alert("Пожалуйста, заполните имя, email и сообщение.");
+      alert("Please fill in your name, email, and message.");
       return;
     }
     setLoading(true);
     try {
       const payload = { name, email, phone, message };
-      const endpoint = `${window.location.origin}/api/send-contact`;
+     const endpoint = "/api/send-contact";
       const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -29,13 +29,21 @@ export default function ContactForm(): React.ReactElement {
         setEmail("");
         setPhone("");
         setMessage("");
-        alert("Сообщение отправлено.");
+        alert("Your message has been sent successfully.");
       } else {
-        const data = await res.json().catch(() => ({ error: "unknown" }));
-        alert("Ошибка: " + (data?.error || "send failed"));
+        const data = await res.json().catch(() => ({ error: "unknown", detail: "" }));
+
+        console.error("send-contact error:", data);
+
+        alert(
+          "Error sending message.\n" +
+            "Error: " +
+            (data?.error || "unknown") +
+            (data?.detail ? "\nDetails: " + data.detail : "")
+        );
       }
     } catch (err: any) {
-      alert("Ошибка отправки: " + (err?.message || err));
+      alert("Sending error: " + (err?.message || err));
     } finally {
       setLoading(false);
     }
@@ -44,28 +52,58 @@ export default function ContactForm(): React.ReactElement {
   return (
     <form onSubmit={submitContact} className="space-y-4" aria-label="Contact form">
       <div>
-        <label className="block text-sm font-medium mb-1">Ваше имя</label>
-        <input className="w-full rounded-md border px-3 py-2" value={name} onChange={(e) => setName(e.target.value)} placeholder="Иван Иванов" required />
+        <label className="block text-sm font-medium mb-1">Your Name</label>
+        <input
+          className="w-full rounded-md border px-3 py-2"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="John Doe"
+          required
+        />
       </div>
 
       <div>
         <label className="block text-sm font-medium mb-1">Email</label>
-        <input type="email" className="w-full rounded-md border px-3 py-2" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" required />
+        <input
+          type="email"
+          className="w-full rounded-md border px-3 py-2"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="you@example.com"
+          required
+        />
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1">Телефон (необязательно)</label>
-        <input type="tel" className="w-full rounded-md border px-3 py-2" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+1 (555) 123-4567" />
+        <label className="block text-sm font-medium mb-1">Phone (optional)</label>
+        <input
+          type="tel"
+          className="w-full rounded-md border px-3 py-2"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          placeholder="+1 (555) 123-4567"
+        />
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1">Сообщение</label>
-        <textarea className="w-full rounded-md border px-3 py-2" value={message} onChange={(e) => setMessage(e.target.value)} rows={5} placeholder="Опишите вашу ситуацию" required />
+        <label className="block text-sm font-medium mb-1">Message</label>
+        <textarea
+          className="w-full rounded-md border px-3 py-2"
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          rows={5}
+          placeholder="How can we help you?"
+          required
+        />
       </div>
 
       <div className="flex items-center gap-3">
-        <button type="submit" disabled={loading} className="rounded-xl bg-[#2d2846] text-white px-6 py-2 font-semibold hover:opacity-90">
-          {loading ? "Отправка..." : "Отправить"}
+        <button
+          type="submit"
+          disabled={loading}
+          className="rounded-xl bg-[#2d2846] text-white px-6 py-2 font-semibold hover:opacity-90 transition"
+        >
+          {loading ? "Sending…" : "Send Message"}
         </button>
       </div>
     </form>

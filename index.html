@@ -5,6 +5,7 @@
 
     <title>Exodus Recovery Program – A New Life Starts Today</title>
 
+    <!-- Basic SEO -->
     <meta
       name="description"
       content="Exodus Recovery Program – a faith-based long-term recovery and rehabilitation program in Feasterville, PA. Structured residential care, outpatient support, and family programs."
@@ -45,7 +46,7 @@
       content="https://exodusrecovery.org/images/og-banner.jpg"
     />
 
-    <!-- JSON-LD: LocalBusiness + WebSite + ImageObject -->
+    <!-- JSON-LD: LocalBusiness + WebSite + FAQ + Breadcrumb + Video + Articles -->
     <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -71,47 +72,57 @@
         "latitude": 40.1469,
         "longitude": -75.0069
       },
-      "openingHoursSpecification": [{
-        "@type": "OpeningHoursSpecification",
-        "dayOfWeek": [
-          "Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"
-        ],
-        "opens": "00:00",
-        "closes": "23:59"
-      }],
+      "openingHoursSpecification": [
+        {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+            "Sunday"
+          ],
+          "opens": "00:00",
+          "closes": "23:59"
+        }
+      ],
       "sameAs": [
         "https://www.facebook.com/exodusrecoverygroup"
-      ],
-      "serviceOffer": [
-        {
-          "@type": "Service",
-          "name": "Residential Recovery Program",
-          "description": "Structured 6-month inpatient residential program with discipleship, counseling, and life skills."
-        },
-        {
-          "@type": "Service",
-          "name": "Social Resocialization Program",
-          "description": "12-month transitional housing, mentoring, job readiness, and community integration."
-        },
-        {
-          "@type": "Service",
-          "name": "Outpatient & Family Support",
-          "description": "Outpatient recovery, co-dependency courses, and family education."
-        }
       ]
     },
+
+    {
+      "@type": "Organization",
+      "@id": "https://exodusrecovery.org/#org",
+      "name": "Exodus Recovery Program",
+      "url": "https://exodusrecovery.org/",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://exodusrecovery.org/logo-exodus.svg"
+      },
+      "sameAs": [
+        "https://www.facebook.com/exodusrecoverygroup"
+      ]
+    },
+
     {
       "@type": "WebSite",
       "@id": "https://exodusrecovery.org/#website",
       "url": "https://exodusrecovery.org/",
       "name": "Exodus Recovery Program",
       "alternateName": "Exodus Recovery",
+      "publisher": {
+        "@id": "https://exodusrecovery.org/#organization"
+      },
       "potentialAction": {
         "@type": "SearchAction",
         "target": "https://exodusrecovery.org/?s={search_term_string}",
         "query-input": "required name=search_term_string"
       }
     },
+
     {
       "@type": "ImageObject",
       "@id": "https://exodusrecovery.org/#og-image",
@@ -119,6 +130,165 @@
       "width": 1200,
       "height": 630,
       "caption": "Exodus Recovery Program – A New Life Starts Today"
+    },
+
+    {
+      "@type": "VideoObject",
+      "@id": "https://exodusrecovery.org/#hero-video",
+      "name": "Exodus Recovery – Real Story",
+      "description": "A short video story from Exodus Recovery Program about freedom from addiction and a new life in Christ.",
+      "thumbnailUrl": [
+        "https://img.youtube.com/vi/rf4kmI2G7RU/maxresdefault.jpg"
+      ],
+      "uploadDate": "2023-01-01",
+      "embedUrl": "https://www.youtube.com/embed/rf4kmI2G7RU",
+      "publisher": {
+        "@id": "https://exodusrecovery.org/#organization"
+      }
+    },
+
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://exodusrecovery.org/#breadcrumbs",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://exodusrecovery.org/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Programs",
+          "item": "https://exodusrecovery.org/#programs"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Admissions",
+          "item": "https://exodusrecovery.org/#admissions"
+        }
+      ]
+    },
+
+    {
+      "@type": "FAQPage",
+      "@id": "https://exodusrecovery.org/#faq",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What programs does Exodus Recovery offer?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "We provide a structured 6-month residential program, a 12-month social resocialization program, outpatient support, and family and co-dependency courses."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How long is the residential program?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Our Stage 1 residential program is typically 6 months and includes discipleship, counseling, work therapy, and relapse-prevention."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is Exodus Recovery faith-based?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Exodus Recovery is a Christ-centered, faith-based recovery program that combines structured care, counseling, and community with Biblical discipleship."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Do you work with families and co-dependency issues?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. We offer family and co-dependency courses that focus on boundaries, communication, education, and healthy recovery for loved ones."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Where is Exodus Recovery located?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "We are located at 11 Franklin Ave, Feasterville-Trevose, Pennsylvania, and serve individuals from across the United States."
+          }
+        }
+      ]
+    },
+
+    {
+      "@type": "Article",
+      "@id": "https://exodusrecovery.org/#story-feliks",
+      "headline": "Feliks – From addiction to freedom",
+      "description": "Feliks shares how God changed his heart and gave him true freedom and purpose at Exodus Recovery after years of addiction.",
+      "author": {
+        "@type": "Person",
+        "name": "Feliks Galkin"
+      },
+      "image": "https://exodusrecovery.org/images/og-banner.jpg",
+      "publisher": {
+        "@id": "https://exodusrecovery.org/#organization"
+      },
+      "mainEntityOfPage": {
+        "@id": "https://exodusrecovery.org/#stories"
+      }
+    },
+
+    {
+      "@type": "Article",
+      "@id": "https://exodusrecovery.org/#story-jessica",
+      "headline": "Jessica – A new beginning in Christ",
+      "description": "Jessica testifies how she found true freedom, hope, and purpose in Christ through Exodus Recovery.",
+      "author": {
+        "@type": "Person",
+        "name": "Jessica Steinacker"
+      },
+      "image": "https://exodusrecovery.org/images/og-banner.jpg",
+      "publisher": {
+        "@id": "https://exodusrecovery.org/#organization"
+      },
+      "mainEntityOfPage": {
+        "@id": "https://exodusrecovery.org/#stories"
+      }
+    },
+
+    {
+      "@type": "Article",
+      "@id": "https://exodusrecovery.org/#story-andrey",
+      "headline": "Andrey – 15 years of addiction to a new calling",
+      "description": "Andrey shares how after 15 years of addiction he found freedom, a new family, and a calling to help others through Exodus Recovery.",
+      "author": {
+        "@type": "Person",
+        "name": "Andrey Andriyak"
+      },
+      "image": "https://exodusrecovery.org/images/og-banner.jpg",
+      "publisher": {
+        "@id": "https://exodusrecovery.org/#organization"
+      },
+      "mainEntityOfPage": {
+        "@id": "https://exodusrecovery.org/#stories"
+      }
+    },
+
+    {
+      "@type": "Article",
+      "@id": "https://exodusrecovery.org/#story-dennis",
+      "headline": "Dennis – From overdoses to real freedom",
+      "description": "Dennis tells how a life of overdoses, jail, and rehabs was changed after he came to Exodus Recovery Center and received absolute freedom from addiction.",
+      "author": {
+        "@type": "Person",
+        "name": "Dennis Mogil"
+      },
+      "image": "https://exodusrecovery.org/images/og-banner.jpg",
+      "publisher": {
+        "@id": "https://exodusrecovery.org/#organization"
+      },
+      "mainEntityOfPage": {
+        "@id": "https://exodusrecovery.org/#stories"
+      }
     }
   ]
 }

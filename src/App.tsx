@@ -29,6 +29,8 @@ import { Link } from "react-router-dom";
 import Header from "@/components/Header";
 import { useRef } from "react";
 import { useInView, useAnimation } from "framer-motion";
+import LazyYouTube from "@/components/LazyYouTube";
+import { MessageCircle, ClipboardCheck } from "lucide-react";
 
 // ==== Motion presets ====
 const fadeInUp = {
@@ -447,89 +449,138 @@ export default function RehabWebsite() {
      <Header />
 
       {/* Hero */}
-      <section id="hero" className="relative">
-        <div className="max-w-6xl mx-auto px-4 py-10 md:py-16 grid md:grid-cols-2 gap-8 items-center">
-          <div>
-            <div className="text-2xl md:text-3xl font-semibold text-[var(--brand)] mb-1">
-              Recovery starts with one step
-            </div>
+<section
+  id="hero"
+  className="relative overflow-hidden border-b border-slate-200"
+  aria-labelledby="hero-title"
+>
+  {/* Мягкий фон-градиент */}
+  <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[#f4f5ff] via-white to-[#f7fbff]" />
 
-            <h1 className="text-4xl md:text-6xl font-extrabold leading-[1.05] text-slate-900">
-              A new life <span className="text-[var(--brand)]">starts today</span>.
-            </h1>
+  <div className="relative max-w-6xl mx-auto px-4 py-12 md:py-20 grid md:grid-cols-2 gap-10 items-center">
+    {/* LEFT — текст + CTA */}
+    <div>
+      {/* бейдж сверху */}
+      <div className="inline-flex items-center gap-2 rounded-full bg-[var(--brand)]/8 text-[var(--brand)] px-3 py-1 text-xs font-semibold mb-4">
+        <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--brand)] text-white text-[10px]">
+          ✓
+        </span>
+        Faith-based long-term recovery
+      </div>
 
-            <p className="mt-5 text-lg md:text-xl text-slate-600">
-              Confidential, judgment-free recovery with structure, community, and hope.
-              Real change begins with one step.
-            </p>
+      <h1
+        id="hero-title"
+        className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-[1.05] text-slate-900 tracking-tight"
+      >
+        A new life{" "}
+        <span className="text-[var(--brand)]">
+          starts today
+        </span>.
+      </h1>
 
-            <div className="mt-5 inline-flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-2 shadow-sm">
-              <span className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-slate-300 text-[10px]">
-                ✓
-              </span>
-              <span className="text-slate-700 text-sm">
-                Need help now? <strong>(571) 982-2395</strong>
-              </span>
-            </div>
+      <p className="mt-5 text-lg md:text-xl text-slate-600 max-w-xl">
+        Confidential, judgment-free recovery with structure, community, and hope.
+        Real change begins with one step — you don’t have to walk it alone.
+      </p>
 
-            <div className="mt-7 flex flex-wrap gap-3">
-              <a
-                href="#contact"
-                className="rounded-xl bg-[var(--brand)] hover:bg-[var(--brand-dark)] px-6 py-3 font-semibold text-white shadow-sm"
-              >
-                Get Help Now
-              </a>
-              <a
-                href="#programs"
-                className="rounded-xl border border-slate-300 px-6 py-3 font-semibold text-slate-900 hover:bg-slate-50"
-              >
-                Explore Programs
-              </a>
-            </div>
+      {/* hotline */}
+      <div className="mt-6 inline-flex items-center gap-3 rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 shadow-sm backdrop-blur">
+        <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-slate-300 text-[11px]">
+          📞
+        </span>
+        <span className="text-slate-700 text-sm">
+          Need help now?{" "}
+          <strong className="font-semibold">
+            (571) 982-2395
+          </strong>
+          {" • "}
+          <span className="text-emerald-600 font-medium">
+            Call 24/7
+          </span>
+        </span>
+      </div>
 
-            <div className="mt-5 flex items-center gap-3 text-slate-500 text-sm">
-              <span className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-slate-300">
-                ✓
-              </span>
-              <span>501(c)(3) nonprofit • Confidential • HIPAA-minded</span>
-            </div>
+      {/* CTAs */}
+      <div className="mt-7 flex flex-wrap gap-3">
+        <a
+          href="#contact"
+          className="btn-brand"
+        >
+          Get Help Now
+        </a>
+        <a
+          href="#programs"
+          className="btn-outline-brand"
+        >
+          Explore Programs
+        </a>
+      </div>
 
-            <ul className="mt-6 space-y-2 text-slate-700 text-[15px]">
-              <li className="flex items-start gap-2">
-                <span className="text-emerald-600 mt-1">✔</span> Stage 1: 6-month residential program
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-emerald-600 mt-1">✔</span> Stage 2: 12-month social resocialization
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-emerald-600 mt-1">✔</span> Outpatient + co-dependency courses
-              </li>
-            </ul>
+      {/* trust line */}
+      <div className="mt-5 flex flex-wrap items-center gap-3 text-slate-500 text-sm">
+        <span className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-slate-300 text-[11px]">
+          ✓
+        </span>
+        <span>Faith-based 501(c)(3) nonprofit</span>
+        <span className="hidden md:inline-block text-slate-300">•</span>
+        <span>Confidential • Long-term residential & outpatient care</span>
+      </div>
+
+      {/* мини-пункты */}
+      <ul className="mt-6 space-y-2 text-slate-700 text-[15px]">
+        <li className="flex items-start gap-2">
+          <span className="text-emerald-600 mt-1">✔</span>
+          Stage 1: 6-month residential program
+        </li>
+        <li className="flex items-start gap-2">
+          <span className="text-emerald-600 mt-1">✔</span>
+          Stage 2: 12-month social resocialization
+        </li>
+        <li className="flex items-start gap-2">
+          <span className="text-emerald-600 mt-1">✔</span>
+          Outpatient & co-dependency courses for families
+        </li>
+      </ul>
+    </div>
+
+    {/* RIGHT — карточка с видео */}
+    <div className="relative">
+      {/* лёгкая подсветка под карточкой */}
+      <div className="absolute -inset-4 md:-inset-6 bg-gradient-to-tr from-[var(--brand)]/10 via-transparent to-[var(--accent)]/10 blur-2xl -z-10" />
+
+      <div className="relative rounded-3xl bg-slate-100/80 border border-slate-200 overflow-hidden shadow-[0_18px_50px_rgba(15,23,42,0.18)]">
+        {/* бейдж поверх */}
+        <div className="absolute left-4 top-4 z-10">
+          <span className="inline-flex items-center gap-2 rounded-full bg-black/65 text-white text-xs md:text-sm px-3 py-1.5 backdrop-blur">
+            <span className="inline-block h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse" />
+            Real story • 2 min
+          </span>
+        </div>
+
+        {/* lazy YouTube */}
+        <div className="aspect-video">
+          <LazyYouTube videoId="rf4kmI2G7RU" />
+        </div>
+
+        {/* подпись под видео */}
+        <div className="border-t border-slate-200 bg-white/90 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div className="text-xs md:text-sm text-slate-600">
+            <span className="font-semibold text-slate-800">
+              Real people. Real change.
+            </span>{" "}
+            — filmed with alumni of Exodus Recovery.
           </div>
-
-          <div className="relative rounded-3xl bg-slate-100 border border-slate-200 overflow-hidden shadow-[0_10px_30px_rgba(2,6,23,0.06)]">
-            <div className="aspect-video">
-  <iframe
-    width="1280"
-    height="720"
-    src="https://www.youtube.com/embed/rf4kmI2G7RU"
-    title="Exodus Recovery story"
-    frameBorder="0"
-    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-    allowFullScreen
-    className="w-full h-full"
-  ></iframe>
-</div>
-
-            <div className="absolute left-3 top-3">
-              <span className="inline-flex items-center gap-2 rounded-full bg-black/60 text-white text-xs md:text-sm px-3 py-1.5 backdrop-blur">
-                <span className="inline-block h-2 w-2 rounded-full bg-emerald-400" />
-                Watch a real story (2 min)
-              </span>
-            </div>
+          <div className="flex items-center gap-2 text-xs text-slate-500">
+            <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 text-[11px]">
+              ✓
+            </span>
+            <span>100+ lives impacted</span>
           </div>
         </div>
-      </section>
+      </div>
+    </div>
+  </div>
+</section>
 
       {/* Stories */}
       <Section
@@ -1006,37 +1057,82 @@ export default function RehabWebsite() {
       </Section>
 
       {/* Admissions */}
-      <Section id="admissions" title="Admissions" subtitle="A clear path to start">
-        <ol className="grid md:grid-cols-3 gap-6 list-decimal list-inside text-slate-700">
-          <li className="rounded-2xl border border-slate-200 p-6">
-            <p className="font-semibold">Free consultation</p>
-            <p className="mt-2">
-              Call or submit the form—we’ll help you choose inpatient or outpatient and explain stages.
-            </p>
-          </li>
-          <li className="rounded-2xl border border-slate-200 p-6">
-            <p className="font-semibold">Assessment & plan</p>
-            <p className="mt-2">
-              Clinical & spiritual assessment, goals, schedule, and costs.
-            </p>
-          </li>
-          <li className="rounded-2xl border border-slate-200 p-6">
-            <p className="font-semibold">Start treatment</p>
-            <p className="mt-2">Onboarding coach and community support from day one.</p>
-          </li>
-        </ol>
-        <div className="mt-8 text-slate-600">{BRAND.serviceArea}</div>
-        <div className="mt-4">
-          <a href="#contact">
-            <Button
-              className="rounded-xl px-6 text-base"
-              style={{ background: BRAND.colors.primary }}
-            >
-              Start today
-            </Button>
-          </a>
-        </div>
-      </Section>
+      <Section
+  id="admissions"
+  title="Admissions"
+  subtitle="A clear and compassionate path to get started."
+>
+  <div className="grid md:grid-cols-3 gap-6">
+    {/* Step 1 */}
+    <Card className="rounded-2xl shadow-sm">
+      <CardHeader className="flex items-center gap-3">
+        <span
+          className="inline-flex h-12 w-12 items-center justify-center rounded-xl"
+          style={{ background: BRAND.colors.muted }}
+        >
+          <MessageCircle className="h-6 w-6" style={{ color: BRAND.colors.primary }} />
+        </span>
+        <CardTitle>Free Consultation</CardTitle>
+      </CardHeader>
+      <CardContent className="text-slate-700 space-y-2">
+        <p>
+          Call us or submit a form. We’ll help you choose inpatient or outpatient care and explain
+          every step in detail.
+        </p>
+      </CardContent>
+    </Card>
+
+    {/* Step 2 */}
+    <Card className="rounded-2xl shadow-sm">
+      <CardHeader className="flex items-center gap-3">
+        <span
+          className="inline-flex h-12 w-12 items-center justify-center rounded-xl"
+          style={{ background: BRAND.colors.muted }}
+        >
+          <ClipboardCheck className="h-6 w-6" style={{ color: BRAND.colors.primary }} />
+        </span>
+        <CardTitle>Assessment & Plan</CardTitle>
+      </CardHeader>
+      <CardContent className="text-slate-700 space-y-2">
+        <p>
+          A full clinical and spiritual assessment, goal-setting, treatment plan, and scheduling.
+        </p>
+      </CardContent>
+    </Card>
+
+    {/* Step 3 */}
+    <Card className="rounded-2xl shadow-sm">
+      <CardHeader className="flex items-center gap-3">
+        <span
+          className="inline-flex h-12 w-12 items-center justify-center rounded-xl"
+          style={{ background: BRAND.colors.muted }}
+        >
+          <HeartHandshake className="h-6 w-6" style={{ color: BRAND.colors.primary }} />
+        </span>
+        <CardTitle>Start Treatment</CardTitle>
+      </CardHeader>
+      <CardContent className="text-slate-700 space-y-2">
+        <p>
+          You begin your program with full support, community connection, and structured daily
+          guidance.
+        </p>
+      </CardContent>
+    </Card>
+  </div>
+
+  <div className="mt-8 text-slate-600">{BRAND.serviceArea}</div>
+
+  <div className="mt-4">
+    <a href="#contact">
+      <Button
+        className="rounded-xl px-6 text-base"
+        style={{ background: BRAND.colors.primary }}
+      >
+        Start today
+      </Button>
+    </a>
+  </div>
+</Section>
 
       {/* Contact */}
 <Section id="contact" title="Contact">
