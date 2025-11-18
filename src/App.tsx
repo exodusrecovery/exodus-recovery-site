@@ -457,139 +457,89 @@ const [openFaq, setOpenFaq] = useState<number | null>(null);
 
      <Header />
 
-      {/* Hero */}
-<section
-  id="hero"
-  className="relative overflow-hidden border-b border-slate-200"
-  aria-labelledby="hero-title"
->
-  {/* Мягкий фон-градиент */}
-  <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[#f4f5ff] via-white to-[#f7fbff]" />
+            {/* Hero */}
+      <section id="hero" className="relative">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 md:py-16 grid md:grid-cols-2 gap-10 items-center">
+          <div>
+            {/* Маленький заголовок */}
+            <div className="text-sm sm:text-base md:text-2xl font-semibold text-[var(--brand)] mb-2">
+              Recovery starts with one step
+            </div>
 
-  <div className="relative max-w-6xl mx-auto px-4 py-12 md:py-20 grid md:grid-cols-2 gap-10 items-center">
-    {/* LEFT — текст + CTA */}
-    <div>
-      {/* бейдж сверху */}
-      <div className="inline-flex items-center gap-2 rounded-full bg-[var(--brand)]/8 text-[var(--brand)] px-3 py-1 text-xs font-semibold mb-4">
-        <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--brand)] text-white text-[10px]">
-          ✓
-        </span>
-        Faith-based long-term recovery
-      </div>
+            {/* Главный заголовок */}
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold leading-[1.1] text-slate-900">
+              A new life <span className="text-[var(--brand)]">starts today</span>.
+            </h1>
 
-      <h1
-        id="hero-title"
-        className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-[1.05] text-slate-900 tracking-tight"
-      >
-        A new life{" "}
-        <span className="text-[var(--brand)]">
-          starts today
-        </span>.
-      </h1>
+            {/* Подзаголовок */}
+            <p className="mt-4 text-base sm:text-lg md:text-xl text-slate-600">
+              Confidential, judgment-free recovery with structure, community, and hope.
+              Real change begins with one step.
+            </p>
 
-      <p className="mt-5 text-lg md:text-xl text-slate-600 max-w-xl">
-        Confidential, judgment-free recovery with structure, community, and hope.
-        Real change begins with one step — you don’t have to walk it alone.
-      </p>
+            {/* Линия “Need help now” */}
+            <div className="mt-5 inline-flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-2 sm:px-4 sm:py-2.5 shadow-sm">
+              <span className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-slate-300 text-[10px]">
+                ✓
+              </span>
+              <span className="text-slate-700 text-xs sm:text-sm">
+                Need help now? <strong>(571) 982-2395</strong>
+              </span>
+            </div>
 
-      {/* hotline */}
-      <div className="mt-6 inline-flex items-center gap-3 rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 shadow-sm backdrop-blur">
-        <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-slate-300 text-[11px]">
-          📞
-        </span>
-        <span className="text-slate-700 text-sm">
-          Need help now?{" "}
-          <strong className="font-semibold">
-            (571) 982-2395
-          </strong>
-          {" • "}
-          <span className="text-emerald-600 font-medium">
-            Call 24/7
-          </span>
-        </span>
-      </div>
+            {/* Кнопки CTA */}
+            <div className="mt-6 flex flex-col sm:flex-row gap-3">
+              <a
+                href="#contact"
+                className="btn-brand w-full sm:w-auto text-center"
+              >
+                Get Help Now
+              </a>
+              <a
+                href="#programs"
+                className="btn-outline-brand w-full sm:w-auto text-center"
+              >
+                Explore Programs
+              </a>
+            </div>
 
-      {/* CTAs */}
-      <div className="mt-7 flex flex-wrap gap-3">
-        <a
-          href="#contact"
-          className="btn-brand"
-        >
-          Get Help Now
-        </a>
-        <a
-          href="#programs"
-          className="btn-outline-brand"
-        >
-          Explore Programs
-        </a>
-      </div>
+            {/* Текст под кнопками */}
+            <div className="mt-5 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 text-slate-500 text-xs sm:text-sm">
+              <span className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-slate-300">
+                ✓
+              </span>
+              <span>501(c)(3) nonprofit • Confidential • HIPAA-minded</span>
+            </div>
 
-      {/* trust line */}
-      <div className="mt-5 flex flex-wrap items-center gap-3 text-slate-500 text-sm">
-        <span className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-slate-300 text-[11px]">
-          ✓
-        </span>
-        <span>Faith-based 501(c)(3) nonprofit</span>
-        <span className="hidden md:inline-block text-slate-300">•</span>
-        <span>Confidential • Long-term residential & outpatient care</span>
-      </div>
-
-      {/* мини-пункты */}
-      <ul className="mt-6 space-y-2 text-slate-700 text-[15px]">
-        <li className="flex items-start gap-2">
-          <span className="text-emerald-600 mt-1">✔</span>
-          Stage 1: 6-month residential program
-        </li>
-        <li className="flex items-start gap-2">
-          <span className="text-emerald-600 mt-1">✔</span>
-          Stage 2: 12-month social resocialization
-        </li>
-        <li className="flex items-start gap-2">
-          <span className="text-emerald-600 mt-1">✔</span>
-          Outpatient & co-dependency courses for families
-        </li>
-      </ul>
-    </div>
-
-    {/* RIGHT — карточка с видео */}
-    <div className="relative">
-      {/* лёгкая подсветка под карточкой */}
-      <div className="absolute -inset-4 md:-inset-6 bg-gradient-to-tr from-[var(--brand)]/10 via-transparent to-[var(--accent)]/10 blur-2xl -z-10" />
-
-      <div className="relative rounded-3xl bg-slate-100/80 border border-slate-200 overflow-hidden shadow-[0_18px_50px_rgba(15,23,42,0.18)]">
-        {/* бейдж поверх */}
-        <div className="absolute left-4 top-4 z-10">
-          <span className="inline-flex items-center gap-2 rounded-full bg-black/65 text-white text-xs md:text-sm px-3 py-1.5 backdrop-blur">
-            <span className="inline-block h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse" />
-            Real story • 2 min
-          </span>
-        </div>
-
-        {/* lazy YouTube */}
-        <div className="aspect-video">
-          <LazyYouTube videoId="rf4kmI2G7RU" />
-        </div>
-
-        {/* подпись под видео */}
-        <div className="border-t border-slate-200 bg-white/90 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <div className="text-xs md:text-sm text-slate-600">
-            <span className="font-semibold text-slate-800">
-              Real people. Real change.
-            </span>{" "}
-            — filmed with alumni of Exodus Recovery.
+            {/* Маркеры программ */}
+            <ul className="mt-6 space-y-2 text-slate-700 text-[14px] sm:text-[15px]">
+              <li className="flex items-start gap-2">
+                <span className="text-emerald-600 mt-1">✔</span> Stage 1: 6-month residential program
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-emerald-600 mt-1">✔</span> Stage 2: 12-month social resocialization
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-emerald-600 mt-1">✔</span> Outpatient + co-dependency courses
+              </li>
+            </ul>
           </div>
-          <div className="flex items-center gap-2 text-xs text-slate-500">
-            <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 text-[11px]">
-              ✓
-            </span>
-            <span>100+ lives impacted</span>
+
+          {/* Правая часть — видео */}
+          <div className="relative rounded-3xl bg-slate-100 border border-slate-200 overflow-hidden shadow-[0_10px_30px_rgba(2,6,23,0.06)]">
+            <div className="aspect-video">
+              <LazyYouTube videoId="rf4kmI2G7RU" />
+            </div>
+
+            <div className="absolute left-3 top-3">
+              <span className="inline-flex items-center gap-2 rounded-full bg-black/60 text-white text-xs md:text-sm px-3 py-1.5 backdrop-blur">
+                <span className="inline-block h-2 w-2 rounded-full bg-emerald-400" />
+                Watch a real story (2 min)
+              </span>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
-</section>
+      </section>
 
       {/* Stories */}
       <Section

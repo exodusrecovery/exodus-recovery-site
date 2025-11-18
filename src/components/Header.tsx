@@ -1,71 +1,107 @@
 // src/components/Header.tsx
-import React from "react";
-import { Link } from "react-router-dom";
-import { Phone, Mail, MapPin } from "lucide-react";
+import React, { useState } from "react";
+import { Phone, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { BRAND } from "@/lib/brand";
 
-export default function Header() {
+const NAV_ITEMS = [
+  { href: "#about", label: "About" },
+  { href: "#programs", label: "Programs" },
+  { href: "#approach", label: "Approach" },
+  { href: "#admissions", label: "Admissions" },
+  { href: "#stories", label: "Stories" },
+  { href: "#contact", label: "Contact" },
+  { href: "#support", label: "Donate" },
+];
+
+export default function Header(): React.ReactElement {
+  const [open, setOpen] = useState(false);
+
+  const handleNavClick = (href: string) => {
+    setOpen(false);
+    const el = document.querySelector(href);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
   return (
-    <>
-      {/* –í–µ—Ä—Ö–Ω—è—è –∫–æ–Ω—Ç–∞–∫—Ç–Ω–∞—è –ø–æ–ª–æ—Å–∫–∞ */}
-      <div
-        className="w-full text-sm"
-        style={{ background: BRAND.colors.primary, color: "white" }}
-      >
-        <div className="max-w-6xl mx-auto px-4 py-2 flex flex-wrap items-center gap-4 justify-between">
-          <div className="flex items-center gap-6">
-            <a className="flex items-center gap-2 hover:opacity-90" href={`tel:${BRAND.phone}`}>
-              <Phone className="h-4 w-4" />
-              {BRAND.phone}
-            </a>
-            <a className="flex items-center gap-2 hover:opacity-90" href={`mailto:${BRAND.email}`}>
-              <Mail className="h-4 w-4" />
-              {BRAND.email}
-            </a>
-            <span className="hidden md:inline-flex items-center gap-2">
-              <MapPin className="h-4 w-4" />
-              {BRAND.address}
-            </span>
-          </div>
-
-          <a
-            href="https://donate.stripe.com/bJecN44Zo54X4odgCa28800"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Button variant="secondary" className="h-8 rounded-full px-4">
-              Donate
-            </Button>
-          </a>
-        </div>
-      </div>
-
-      {/* –ù–∞–≤–∏–≥–∞—Ü–∏—è */}
-      <header className="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-sm">
-        <nav className="max-w-6xl mx-auto px-4 py-0 flex items-center justify-between h-[72px] md:h-[88px]">
-          <Link to="/" className="flex items-center gap-3">
+    <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/80 backdrop-blur">
+      <nav className="max-w-6xl mx-auto px-4 py-2 flex items-center justify-between">
+        {/* ÀŒ√Œ + Õ¿«¬¿Õ»≈ */}
+        <div className="flex items-center gap-3">
+          <a href="#hero" className="flex items-center gap-3">
             <img
               src="/logo-exodus.svg"
               alt="Exodus Recovery Logo"
-              className="h-20 md:h-28 w-auto"
+              className="h-10 w-auto md:h-12"
             />
-            <span className="font-semibold text-base md:text-xl text-slate-800 whitespace-nowrap">
-              {BRAND.name}
+            <span className="hidden sm:inline-block font-semibold text-sm md:text-base text-slate-900">
+              Exodus Recovery Program
             </span>
-          </Link>
+          </a>
+        </div>
 
-          <div className="hidden md:flex items-center gap-4 text-sm md:text-base leading-none">
-            <a className="hover:opacity-70" href="/#about">About</a>
-            <a className="hover:opacity-70" href="/#programs">Programs</a>
-            <a className="hover:opacity-70" href="/#approach">Approach</a>
-            <a className="hover:opacity-70" href="/#admissions">Admissions</a>
-            <a className="hover:opacity-70" href="/#stories">Stories</a>
-            <a className="hover:opacity-70" href="/#contact">Contact</a>
-            <Link to="/videos" className="hover:opacity-70">Videos</Link>
+        {/* ƒ≈— “Œœ Ã≈Õﬁ */}
+        <div className="hidden md:flex items-center gap-6 text-sm">
+          {NAV_ITEMS.map((item) => (
+            <button
+              key={item.href}
+              onClick={() => handleNavClick(item.href)}
+              className="hover:text-slate-900 text-slate-600"
+            >
+              {item.label}
+            </button>
+          ))}
+
+          <a href="tel:+15719822395">
+            <Button
+              className="rounded-full h-9 px-4 text-xs font-semibold"
+              style={{ background: "#2d2846", color: "white" }}
+            >
+              <Phone className="h-4 w-4 mr-1" />
+              Call Now
+            </Button>
+          </a>
+        </div>
+
+        {/* ÃŒ¡»À‹Õ¿ﬂ œ–¿¬¿ﬂ ◊¿—“‹ */}
+        <div className="flex items-center gap-2 md:hidden">
+          <a href="tel:+15719822395">
+            <button
+              className="inline-flex items-center justify-center rounded-full border border-slate-300 px-3 py-1 text-xs font-medium text-slate-800"
+            >
+              <Phone className="h-4 w-4 mr-1" />
+              Call
+            </button>
+          </a>
+
+          {/* ¡”–√≈– */}
+          <button
+            onClick={() => setOpen((prev) => !prev)}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-300 bg-white"
+            aria-label="Toggle navigation"
+          >
+            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
+      </nav>
+
+      {/* ÃŒ¡»À‹ÕŒ≈ ¬€œ¿ƒ¿ﬁŸ≈≈ Ã≈Õﬁ */}
+      {open && (
+        <div className="md:hidden border-t border-slate-200 bg-white">
+          <div className="max-w-6xl mx-auto px-4 py-3 space-y-2">
+            {NAV_ITEMS.map((item) => (
+              <button
+                key={item.href}
+                onClick={() => handleNavClick(item.href)}
+                className="block w-full text-left py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-md"
+              >
+                {item.label}
+              </button>
+            ))}
           </div>
-        </nav>
-      </header>
-    </>
+        </div>
+      )}
+    </header>
   );
 }
