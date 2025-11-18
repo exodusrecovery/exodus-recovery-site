@@ -1,105 +1,62 @@
-// src/components/Header.tsx
 import React, { useState } from "react";
-import { Phone, Menu, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
+import { Menu, X } from "lucide-react";
 
-const NAV_ITEMS = [
-  { href: "#about", label: "About" },
-  { href: "#programs", label: "Programs" },
-  { href: "#approach", label: "Approach" },
-  { href: "#admissions", label: "Admissions" },
-  { href: "#stories", label: "Stories" },
-  { href: "#contact", label: "Contact" },
-  { href: "#support", label: "Donate" },
-];
-
-export default function Header(): React.ReactElement {
+export default function Header() {
   const [open, setOpen] = useState(false);
 
-  const handleNavClick = (href: string) => {
-    setOpen(false);
-    const el = document.querySelector(href);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  };
+  const navItems = [
+    { name: "Our Approach", href: "#approach" },
+    { name: "Admissions", href: "#admissions" },
+    { name: "Stories", href: "#stories" },
+    { name: "Contact", href: "#contact" },
+    { name: "Videos", href: "#videos" },
+  ];
 
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/80 backdrop-blur">
-      <nav className="max-w-6xl mx-auto px-4 py-2 flex items-center justify-between">
-        {/* ÀŒ√Œ + Õ¿«¬¿Õ»≈ */}
-        <div className="flex items-center gap-3">
-          <a href="#hero" className="flex items-center gap-3">
-            <img
-              src="/logo-exodus.svg"
-              alt="Exodus Recovery Logo"
-              className="h-10 w-auto md:h-12"
-            />
-            <span className="hidden sm:inline-block font-semibold text-sm md:text-base text-slate-900">
-              Exodus Recovery Program
-            </span>
-          </a>
-        </div>
+    <header className="w-full border-b bg-white">
+      <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+        {/* Logo */}
+        <a href="/" className="flex items-center">
+          <img
+            src="/logo-exodus.svg"
+            alt="Exodus Recovery"
+            className="h-10 w-auto"
+          />
+        </a>
 
-        {/* ƒ≈— “Œœ Ã≈Õﬁ */}
-        <div className="hidden md:flex items-center gap-6 text-sm">
-          {NAV_ITEMS.map((item) => (
-            <button
-              key={item.href}
-              onClick={() => handleNavClick(item.href)}
-              className="hover:text-slate-900 text-slate-600"
-            >
-              {item.label}
-            </button>
+        {/* Desktop Navigation */}
+        <nav className="hidden md:flex gap-8 text-[17px] font-medium text-slate-800">
+          {navItems.map((item) => (
+            <a key={item.name} href={item.href} className="hover:text-[var(--brand)]">
+              {item.name}
+            </a>
           ))}
+        </nav>
 
-          <a href="tel:+15719822395">
-            <Button
-              className="rounded-full h-9 px-4 text-xs font-semibold"
-              style={{ background: "#2d2846", color: "white" }}
-            >
-              <Phone className="h-4 w-4 mr-1" />
-              Call Now
-            </Button>
-          </a>
-        </div>
+        {/* Mobile Menu Button */}
+        <button
+          className="md:hidden p-2"
+          onClick={() => setOpen(!open)}
+          aria-label="Toggle menu"
+        >
+          {open ? <X size={28} /> : <Menu size={28} />}
+        </button>
+      </div>
 
-        {/* ÃŒ¡»À‹Õ¿ﬂ œ–¿¬¿ﬂ ◊¿—“‹ */}
-        <div className="flex items-center gap-2 md:hidden">
-          <a href="tel:+15719822395">
-            <button
-              className="inline-flex items-center justify-center rounded-full border border-slate-300 px-3 py-1 text-xs font-medium text-slate-800"
-            >
-              <Phone className="h-4 w-4 mr-1" />
-              Call
-            </button>
-          </a>
-
-          {/* ¡”–√≈– */}
-          <button
-            onClick={() => setOpen((prev) => !prev)}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-300 bg-white"
-            aria-label="Toggle navigation"
-          >
-            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
-        </div>
-      </nav>
-
-      {/* ÃŒ¡»À‹ÕŒ≈ ¬€œ¿ƒ¿ﬁŸ≈≈ Ã≈Õﬁ */}
+      {/* Mobile Dropdown */}
       {open && (
-        <div className="md:hidden border-t border-slate-200 bg-white">
-          <div className="max-w-6xl mx-auto px-4 py-3 space-y-2">
-            {NAV_ITEMS.map((item) => (
-              <button
-                key={item.href}
-                onClick={() => handleNavClick(item.href)}
-                className="block w-full text-left py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-md"
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
+        <div className="md:hidden bg-white border-t py-3 px-4 space-y-3 shadow-lg">
+          {navItems.map((item) => (
+            <a
+              key={item.name}
+              href={item.href}
+              onClick={() => setOpen(false)}
+              className="block text-lg py-2 font-medium text-slate-800 hover:text-[var(--brand)]"
+            >
+              {item.name}
+            </a>
+          ))}
         </div>
       )}
     </header>
