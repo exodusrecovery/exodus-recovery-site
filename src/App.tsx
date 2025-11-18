@@ -1,11 +1,19 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
+import { Link } from "react-router-dom";
+import { motion, useInView, useAnimation } from "framer-motion";
+
+// Components
+import Header from "@/components/Header";
 import ContactForm from "@/components/ContactForm";
-import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
 import BeforeAfter from "@/components/BeforeAfter";
+import LazyYouTube from "@/components/LazyYouTube";
+
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+
+// Lucide icons
 import {
   Check,
   Heart,
@@ -17,21 +25,21 @@ import {
   Shield,
   Users,
   BookOpen,
-} from "lucide-react";
-import {
   AlertTriangle,
   HeartHandshake,
   HeartPulse,
   Briefcase,
   History as HistoryIcon,
+  MessageCircle,
+  ClipboardCheck,
+  // Icons for Admissions
+  PhoneCall,
+  ClipboardList,
+  Home,
+  ChevronDown, 
 } from "lucide-react";
-import { Link } from "react-router-dom";
-import Header from "@/components/Header";
-import { useRef } from "react";
-import { useInView, useAnimation } from "framer-motion";
-import LazyYouTube from "@/components/LazyYouTube";
-import { MessageCircle, ClipboardCheck } from "lucide-react";
 
+// ==== Motion presets ====
 // ==== Motion presets ====
 const fadeInUp = {
   hidden: { opacity: 0, y: 24 },
@@ -273,6 +281,7 @@ export default function RehabWebsite() {
 // ------------------------- Stripe helpers (working implementation) -------------------------
   const [oneTimeInput, setOneTimeInput] = useState<string>("");
   const [selectedPriceId, setSelectedPriceId] = useState<string>("price_1SQdWEBrWBoIIHjWnOeeyFNE");
+const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   async function createCheckoutSession(payload: any): Promise<string> {
     const res = await fetch("/api/create-checkout-session", {
@@ -598,14 +607,14 @@ export default function RehabWebsite() {
           {[
             {
               name: "Feliks Galkin",
-              role: "Graduate • 1 year sober",
+              role: "Free for 10 years • Graduate • Mentor",
               quote:
-                "I grew up in Philadelphia and started using drugs at 12. By 17 I was arrested and lost everything. At Exodus Recovery, God changed my heart and gave me true freedom and purpose.",
+  "God gave me freedom and a new life. Today I am 10 years clean and helping others find the same hope.",
               img: "/images/people/feliks.jpg",
             },
             {
               name: "Jessica Steinacker",
-              role: "Graduate • 1 year sober",
+              role: "Graduate • 8 year sober",
               quote:
                 "For years I searched for something to fill the emptiness inside. Addiction only broke me further. At Exodus Recovery, I met Jesus — He gave me true freedom, hope, and purpose.",
               img: "/images/people/jessica.jpg",
@@ -1134,6 +1143,90 @@ export default function RehabWebsite() {
   </div>
 </Section>
 
+            {/* FAQ */}
+      <Section
+        id="faq"
+        title="Frequently Asked Questions"
+        subtitle="Honest answers to common questions about Exodus Recovery."
+      >
+        <div className="grid md:grid-cols-2 gap-6">
+          {[
+            {
+              q: "Who is Exodus Recovery for?",
+              a: "We serve men and women who are struggling with addiction and are ready to commit to a structured, faith-based program and take responsibility for change.",
+            },
+            {
+              q: "Do I have to be religious to come?",
+              a: "No. We welcome anyone who is open to a Christ-centered environment. You will never be forced to believe, but you will be invited to explore faith and ask questions.",
+            },
+            {
+              q: "How long is the program?",
+              a: "Our core residential program is approximately 6 months, followed by a 12-month social resocialization phase. We also offer outpatient support and co-dependency courses.",
+            },
+            {
+              q: "Do you work with families?",
+              a: "Yes. We offer co-dependency and family education, help rebuild trust, and give loved ones tools to support healthy recovery without enabling addiction.",
+            },
+            {
+              q: "Is my information confidential?",
+              a: "Yes. We treat every call, message, and application with strict confidentiality and are committed to protecting your privacy.",
+            },
+            {
+              q: "What is the first step to get help?",
+              a: "The first step is simple: reach out. Call us or fill out the contact form. Our team will listen without judgment and help you understand your next step.",
+            },
+            {
+              q: "What do you believe about healing and transformation?",
+              a: "We believe that true and lasting freedom is possible for anyone who trusts God. What is impossible for people is possible with God. As Jesus said in John 8:31–32: “If you continue in My word, you are truly My disciples, and you will know the truth, and the truth will set you free.”",
+            },
+            {
+              q: "How do you see God’s role in the recovery process?",
+              a: "We believe that God works powerfully through people. He restores what is broken and gives strength to rebuild what seemed destroyed. As written in Isaiah 58:12: “You will rebuild the ancient ruins and will raise up the age-old foundations.” We simply join Him in this work — helping people rebuild their lives with hope, dignity, and purpose.",
+            },
+          ].map((item, i) => {
+            const isOpen = openFaq === i;
+
+            return (
+              <Card
+                key={i}
+                className="rounded-2xl shadow-sm border border-slate-200 bg-white"
+              >
+                {/* Кнопка-вопрос */}
+                <button
+                  type="button"
+                  onClick={() => setOpenFaq(isOpen ? null : i)}
+                  className="w-full text-left"
+                >
+                  <CardHeader className="flex flex-row items-start justify-between gap-2">
+                    <div className="flex items-start gap-2">
+                      <span className="mt-1">
+                        <MessageCircle className="h-5 w-5 text-[var(--brand)]" />
+                      </span>
+                      <CardTitle className="text-base md:text-lg">
+                        {item.q}
+                      </CardTitle>
+                    </div>
+                    <ChevronDown
+                      className={
+                        "h-5 w-5 text-slate-400 transition-transform duration-200" +
+                        (isOpen ? " rotate-180" : "")
+                      }
+                    />
+                  </CardHeader>
+                </button>
+
+                {/* Ответ – показываем только если открыт */}
+                {isOpen && (
+                  <CardContent className="pt-0 pb-4 px-6 text-slate-700 text-sm md:text-[15px] leading-relaxed">
+                    {item.a}
+                  </CardContent>
+                )}
+              </Card>
+            );
+          })}
+        </div>
+      </Section>
+      
       {/* Contact */}
 <Section id="contact" title="Contact">
   <div className="grid md:grid-cols-2 gap-6 items-start">
