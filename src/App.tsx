@@ -278,169 +278,119 @@ const ProgramCard = ({ icon: Icon, title, points }: any) => (
 }
 
 export default function RehabWebsite() {
-// ------------------------- Stripe helpers (working implementation) -------------------------
+  // ------------------------- State & Stripe helpers -------------------------
   const [oneTimeInput, setOneTimeInput] = useState<string>("");
   const [selectedPriceId, setSelectedPriceId] = useState<string>("price_1SQdWEBrWBoIIHjWnOeeyFNE");
-const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
+  const [showFeliks, setShowFeliks] = useState(false);
+  const [activeVideo, setActiveVideo] = useState(0);
+
+  // Создание Stripe Checkout-сессии: возвращаем URL
   async function createCheckoutSession(payload: any): Promise<string> {
     const res = await fetch("/api/create-checkout-session", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
+
     if (!res.ok) {
       const txt = await res.text().catch(() => "");
       throw new Error(`create-checkout-session failed: ${res.status} ${txt}`);
     }
+
     const data = await res.json();
-    if (!data?.url) throw new Error(data?.error?.message || "Stripe error: no url in response");
+    if (!data?.url) {
+      throw new Error(data?.error?.message || "Stripe error: no url in response");
+    }
+
     return data.url;
   }
 
-  function openStripeInNewTab(createSession: () => Promise<string>) {
-    const win = window.open("", "_blank", "noopener,noreferrer");
-    if (!win) {
-      // если окно заблокировано, просто перенаправляем текущую страницу
-      createSession()
-        .then((url) => (window.location.href = url))
-        .catch((e) => alert(e.message || "Stripe error"));
+  // Разовое пожертвование
+  const handleDonateOnce = async () => {
+    const val = (oneTimeInput || "").toString().trim();
+
+    if (!val) {
+      alert("Please enter an amount for one-time donation.");
       return;
     }
 
-    // временное сообщение пока создаётся сессия
-    win.document.write("<p style='font:16px system-ui;margin:20px'>Redirecting to Stripe…</p>");
+    const cleaned = val.replace(/\$/g, "").replace(/,/g, "");
+    const num = Number(cleaned);
 
-    createSession()
-      .then((url) => {
-        try {
-          win.location.href = url;
-        } catch (err) {
-          win.close();
-          alert("Could not open Stripe Checkout.");
-        }
-      })
-      .catch((e) => {
-        win.close();
-        alert(e.message || "Stripe error");
+    if (!Number.isFinite(num) || num <= 0) {
+      alert("Enter a valid numeric amount.");
+      return;
+    }
+
+    const cents = Math.round(num * 100);
+
+    try {
+      const url = await createCheckoutSession({
+        mode: "payment",
+        amount: cents,
       });
-  }
 
-  // === One-time donation (Give) ===
-const handleDonateOnce = async () => {
-  const val = (oneTimeInput || "").toString().trim();
+      // Редирект в ЭТОЙ ЖЕ вкладке
+      window.location.href = url;
+    } catch (error: any) {
+      console.error(error);
+      alert(error?.message || "Something went wrong while starting payment.");
+    }
+  };
 
-  if (!val) {
-    alert("Please enter an amount for one-time donation.");
-    return;
-  }
+  // Ежемесячная подписка
+  const handleDonateMonthly = async (priceOrAmount: string | number) => {
+    let resolvedPriceId: string | undefined;
 
-  const cleaned = val.replace(/\$/g, "").replace(/,/g, "");
-  const num = Number(cleaned);
-
-  if (!Number.isFinite(num) || num <= 0) {
-    alert("Enter a valid numeric amount.");
-    return;
-  }
-
-  const cents = Math.round(num * 100);
-
-  try {
-    // Create checkout session on backend
-    const session = await createCheckoutSession({
-      mode: "payment",
-      amount: cents,
-    });
-
-    // Redirect in SAME tab (fixes the blank window issue)
-    if (session && session.url) {
-      window.location.href = session.url;
+    if (typeof priceOrAmount === "string" && priceOrAmount.startsWith("price_")) {
+      resolvedPriceId = priceOrAmount;
     } else {
-      alert("Could not start payment. Please try again.");
+      const amt = typeof priceOrAmount === "string" ? Number(priceOrAmount) : priceOrAmount;
+
+      switch (amt) {
+        case 25:
+          resolvedPriceId = import.meta.env.VITE_STRIPE_PRICE_25;
+          break;
+        case 50:
+          resolvedPriceId = import.meta.env.VITE_STRIPE_PRICE_50;
+          break;
+        case 100:
+          resolvedPriceId = import.meta.env.VITE_STRIPE_PRICE_100;
+          break;
+        case 200:
+          resolvedPriceId = import.meta.env.VITE_STRIPE_PRICE_200;
+          break;
+        case 500:
+          resolvedPriceId = import.meta.env.VITE_STRIPE_PRICE_500;
+          break;
+        default:
+          alert("No price selected");
+          return;
+      }
     }
-  } catch (error) {
-    console.error(error);
-    alert("Something went wrong while starting payment.");
-  }
-};
 
-
-// === Monthly donation (Subscribe) ===
-const handleDonateMonthly = async (priceOrAmount: string | number) => {
-  let resolvedPriceId: string | undefined;
-
-  // If passed directly a Stripe price_ id
-  if (typeof priceOrAmount === "string" && priceOrAmount.startsWith("price_")) {
-    resolvedPriceId = priceOrAmount;
-  } else {
-    // If passed an amount like 25 / 50 / 100...
-    const amt = typeof priceOrAmount === "string" ? Number(priceOrAmount) : priceOrAmount;
-
-    switch (amt) {
-      case 25:
-        resolvedPriceId = import.meta.env.VITE_STRIPE_PRICE_25;
-        break;
-      case 50:
-        resolvedPriceId = import.meta.env.VITE_STRIPE_PRICE_50;
-        break;
-      case 100:
-        resolvedPriceId = import.meta.env.VITE_STRIPE_PRICE_100;
-        break;
-      case 200:
-        resolvedPriceId = import.meta.env.VITE_STRIPE_PRICE_200;
-        break;
-      case 500:
-        resolvedPriceId = import.meta.env.VITE_STRIPE_PRICE_500;
-        break;
-      default:
-        alert("No price selected");
-        return;
+    if (!resolvedPriceId) {
+      alert("No price selected");
+      return;
     }
-  }
 
-  if (!resolvedPriceId) {
-    alert("No price selected");
-    return;
-  }
+    try {
+      const url = await createCheckoutSession({
+        mode: "subscription",
+        priceId: resolvedPriceId,
+      });
 
-  try {
-    // Create subscription checkout session on backend
-    const session = await createCheckoutSession({
-      mode: "subscription",
-      priceId: resolvedPriceId,
-    });
-
-    // Redirect in SAME tab (fixes blank popup)
-    if (session && session.url) {
-      window.location.href = session.url;
-    } else {
-      alert("Could not start subscription. Please try again.");
+      window.location.href = url;
+    } catch (error: any) {
+      console.error(error);
+      alert(error?.message || "Something went wrong while starting subscription.");
     }
-  } catch (error) {
-    console.error(error);
-    alert("Something went wrong while starting subscription.");
-  }
-};
+  };
 
-  if (!resolvedPriceId) {
-    alert("Price ID not configured");
-    return;
-  }
+  // ------------------------- END helpers -------------------------
 
-  openStripeInNewTab(() =>
-    createCheckoutSession({
-      mode: "subscription",
-      price_id: resolvedPriceId,
-    })
-  );
-};
-// ------------------------- end Stripe helpers ------------------------------------------------
-  const [showFeliks, setShowFeliks] = useState(false);
-  const [activeVideo, setActiveVideo] = useState(0);
-
-  // === Stripe test handlers ===
-  // ...дальше идёт return(...)
-  
   return (
     <div
       className="relative overflow-hidden min-h-screen bg-gradient-to-b from-gray-100 to-gray-200"
@@ -449,85 +399,77 @@ const handleDonateMonthly = async (priceOrAmount: string | number) => {
       {/* мягкие «ореолы» */}
       <div className="pointer-events-none absolute -top-20 -left-20 h-80 w-80 rounded-full bg-white/30 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-24 -right-24 h-96 w-96 rounded-full bg-white/20 blur-3xl" />
-     <style>{`
-     
-  :root{
-    --brand:${BRAND.colors.primary};
-    --brand-dark:${BRAND.colors.primaryDark};
-    --accent:${BRAND.colors.accent};
-    --accent-dark:${BRAND.colors.accentDark};
-    --muted:${BRAND.colors.muted};
-    --text:${BRAND.colors.text};
-  }
+      <style>{`
+        :root{
+          --brand:${BRAND.colors.primary};
+          --brand-dark:${BRAND.colors.primaryDark};
+          --accent:${BRAND.colors.accent};
+          --accent-dark:${BRAND.colors.accentDark};
+          --muted:${BRAND.colors.muted};
+          --text:${BRAND.colors.text};
+        }
 
-  /* тонкая бренд-полоска под заголовком секции */
-  .brand-underline{
-    display:inline-block;
-    width:96px;height:4px;border-radius:9999px;
-    background: linear-gradient(90deg,var(--brand),var(--accent));
-  }
+        .brand-underline{
+          display:inline-block;
+          width:96px;height:4px;border-radius:9999px;
+          background: linear-gradient(90deg,var(--brand),var(--accent));
+        }
 
-  /* универсальная кнопка в фирменном стиле */
-  .btn-brand{
-    background: var(--brand);
-    color:#fff;
-    border-radius:0.75rem;
-    padding:0.75rem 1.5rem;
-    font-weight:600;
-    box-shadow: 0 8px 20px rgba(45,40,70,.18);
-    transition: transform .15s ease, box-shadow .2s ease, background .2s ease;
-  }
-  .btn-brand:hover{ background: var(--brand-dark); transform: translateY(-1px); }
-  .btn-brand:active{ transform: translateY(0); }
-  .btn-outline-brand{
-    border:1px solid rgba(15,23,42,.15);
-    border-radius:0.75rem;
-    padding:0.75rem 1.5rem;
-    font-weight:600;
-  }
-  .btn-outline-brand:hover{ background: rgba(45,40,70,.04); }
+        .btn-brand{
+          background: var(--brand);
+          color:#fff;
+          border-radius:0.75rem;
+          padding:0.75rem 1.5rem;
+          font-weight:600;
+          box-shadow: 0 8px 20px rgba(45,40,70,.18);
+          transition: transform .15s ease, box-shadow .2s ease, background .2s ease;
+        }
+        .btn-brand:hover{ background: var(--brand-dark); transform: translateY(-1px); }
+        .btn-brand:active{ transform: translateY(0); }
 
-  /* красивый фокус для инпутов/селектов/текстареа */
-  .brand-focus{
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(45,40,70,.18);
-    border-color: var(--brand);
-  }
+        .btn-outline-brand{
+          border:1px solid rgba(15,23,42,.15);
+          border-radius:0.75rem;
+          padding:0.75rem 1.5rem;
+          font-weight:600;
+        }
+        .btn-outline-brand:hover{ background: rgba(45,40,70,.04); }
 
-  /* тонкая цветная полоска сверху у карточек статистики */
-  .stat-accent{
-    position: relative;
-  }
-  .stat-accent::before{
-    content:"";
-    position:absolute;inset:0 0 auto 0;height:3px;border-top-left-radius:1rem;border-top-right-radius:1rem;
-    background: linear-gradient(90deg,var(--brand),var(--accent));
-  }
-`}</style>
+        .brand-focus{
+          outline: none;
+          box-shadow: 0 0 0 3px rgba(45,40,70,.18);
+          border-color: var(--brand);
+        }
 
-     <Header />
+        .stat-accent{
+          position: relative;
+        }
+        .stat-accent::before{
+          content:"";
+          position:absolute;inset:0 0 auto 0;height:3px;border-top-left-radius:1rem;border-top-right-radius:1rem;
+          background: linear-gradient(90deg,var(--brand),var(--accent));
+        }
+      `}</style>
 
-            {/* Hero */}
+      <Header />
+
+      {/* Hero */}
       <section id="hero" className="relative">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 md:py-16 grid md:grid-cols-2 gap-10 items-center">
           <div>
-            {/* Маленький заголовок */}
             <div className="text-sm sm:text-base md:text-2xl font-semibold text-[var(--brand)] mb-2">
               Recovery starts with one step
             </div>
 
-            {/* Главный заголовок */}
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold leading-[1.1] text-slate-900">
               A new life <span className="text-[var(--brand)]">starts today</span>.
             </h1>
 
-            {/* Подзаголовок */}
             <p className="mt-4 text-base sm:text-lg md:text-xl text-slate-600">
               Confidential, judgment-free recovery with structure, community, and hope.
               Real change begins with one step.
             </p>
 
-            {/* Линия “Need help now” */}
             <div className="mt-5 inline-flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-2 sm:px-4 sm:py-2.5 shadow-sm">
               <span className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-slate-300 text-[10px]">
                 ✓
@@ -537,23 +479,15 @@ const handleDonateMonthly = async (priceOrAmount: string | number) => {
               </span>
             </div>
 
-            {/* Кнопки CTA */}
             <div className="mt-6 flex flex-col sm:flex-row gap-3">
-              <a
-                href="#contact"
-                className="btn-brand w-full sm:w-auto text-center"
-              >
+              <a href="#contact" className="btn-brand w-full sm:w-auto text-center">
                 Get Help Now
               </a>
-              <a
-                href="#programs"
-                className="btn-outline-brand w-full sm:w-auto text-center"
-              >
+              <a href="#programs" className="btn-outline-brand w-full sm:w-auto text-center">
                 Explore Programs
               </a>
             </div>
 
-            {/* Текст под кнопками */}
             <div className="mt-5 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 text-slate-500 text-xs sm:text-sm">
               <span className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-slate-300">
                 ✓
@@ -561,7 +495,6 @@ const handleDonateMonthly = async (priceOrAmount: string | number) => {
               <span>501(c)(3) nonprofit • Confidential • HIPAA-minded</span>
             </div>
 
-            {/* Маркеры программ */}
             <ul className="mt-6 space-y-2 text-slate-700 text-[14px] sm:text-[15px]">
               <li className="flex items-start gap-2">
                 <span className="text-emerald-600 mt-1">✔</span> Stage 1: 6-month residential program
@@ -575,7 +508,6 @@ const handleDonateMonthly = async (priceOrAmount: string | number) => {
             </ul>
           </div>
 
-          {/* Правая часть — видео */}
           <div className="relative rounded-3xl bg-slate-100 border border-slate-200 overflow-hidden shadow-[0_10px_30px_rgba(2,6,23,0.06)]">
             <div className="aspect-video">
               <LazyYouTube videoId="rf4kmI2G7RU" />
@@ -609,7 +541,7 @@ const handleDonateMonthly = async (priceOrAmount: string | number) => {
               name: "Feliks Galkin",
               role: "Free for 10 years • Graduate • Mentor",
               quote:
-  "God gave me freedom and a new life. Today I am 10 years clean and helping others find the same hope.",
+                "God gave me freedom and a new life. Today I am 10 years clean and helping others find the same hope.",
               img: "/images/people/feliks.jpg",
             },
             {
@@ -628,15 +560,19 @@ const handleDonateMonthly = async (priceOrAmount: string | number) => {
             },
           ].map((p, i) => (
             <motion.div
-  key={i}
-  variants={fadeInUp}
-  whileHover={{ y: -4, scale: 1.01 }}
-  transition={{ type: "spring", stiffness: 250, damping: 20 }}
-  className={`relative overflow-hidden rounded-2xl shadow-lg group ${p.name === "Feliks Galkin" ? "cursor-pointer" : ""}`}
-  onClick={() => { if (p.name === "Feliks Galkin") setShowFeliks(true); }}
-  role={p.name === "Feliks Galkin" ? "button" : undefined}
-  aria-label={p.name === "Feliks Galkin" ? "Play Feliks video testimony" : undefined}
->
+              key={i}
+              variants={fadeInUp}
+              whileHover={{ y: -4, scale: 1.01 }}
+              transition={{ type: "spring", stiffness: 250, damping: 20 }}
+              className={`relative overflow-hidden rounded-2xl shadow-lg group ${
+                p.name === "Feliks Galkin" ? "cursor-pointer" : ""
+              }`}
+              onClick={() => {
+                if (p.name === "Feliks Galkin") setShowFeliks(true);
+              }}
+              role={p.name === "Feliks Galkin" ? "button" : undefined}
+              aria-label={p.name === "Feliks Galkin" ? "Play Feliks video testimony" : undefined}
+            >
               <img
                 src={p.img}
                 alt={p.name}
@@ -644,13 +580,13 @@ const handleDonateMonthly = async (priceOrAmount: string | number) => {
                 loading="lazy"
               />
               {p.name === "Feliks Galkin" && (
-  <div className="absolute left-3 top-3">
-    <span className="inline-flex items-center gap-2 rounded-full bg-black/60 text-white text-xs md:text-sm px-3 py-1.5 backdrop-blur">
-      <span className="inline-block h-2 w-2 rounded-full bg-emerald-400" />
-      Click to watch
-    </span>
-  </div>
-)}
+                <div className="absolute left-3 top-3">
+                  <span className="inline-flex items-center gap-2 rounded-full bg-black/60 text-white text-xs md:text-sm px-3 py-1.5 backdrop-blur">
+                    <span className="inline-block h-2 w-2 rounded-full bg-emerald-400" />
+                    Click to watch
+                  </span>
+                </div>
+              )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
                 <p className="text-lg font-semibold">{p.name}</p>
@@ -662,220 +598,211 @@ const handleDonateMonthly = async (priceOrAmount: string | number) => {
         </motion.div>
 
         <div className="mt-8">
-  <Link to="/videos">
-  <Button className="rounded-xl px-6 text-base" style={{ background: BRAND.colors.accent }}>
-    Watch video testimonies
-  </Button>
-</Link>
-</div>
-
+          <Link to="/videos">
+            <Button className="rounded-xl px-6 text-base" style={{ background: BRAND.colors.accent }}>
+              Watch video testimonies
+            </Button>
+          </Link>
+        </div>
       </Section>
 
-{/* Gallery */}
-<Section id="gallery" title="Recovery Life" subtitle="Photos from our community">
-  <motion.div
-    className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4"
-    variants={stagger}
-    initial="hidden"
-    whileInView="show"
-    viewport={{ once: true }}
-  >
-    {[
-      "/images/gallery/01.jpg",
-      "/images/gallery/02.jpg",
-      "/images/gallery/03.jpg",
-      "/images/gallery/04.jpg",
-      "/images/gallery/05.jpg",
-      "/images/gallery/06.jpg",
-      "/images/gallery/07.jpg",
-      "/images/gallery/08.jpg",
-      "/images/gallery/09.jpg",
-      "/images/gallery/10.jpg",
-      "/images/gallery/11.jpg",
-      "/images/gallery/12.jpg",
-      "/images/gallery/13.jpg",
-      "/images/gallery/14.jpg",
-      "/images/gallery/15.jpg",
-      "/images/gallery/16.jpg",
-      "/images/gallery/17.jpg",
-    ]
-      .slice(0, 8) // показываем только 8 фото
-      .map((src, i) => (
+      {/* Gallery */}
+      <Section id="gallery" title="Recovery Life" subtitle="Photos from our community">
         <motion.div
-  key={i}
-  initial={{ opacity: 0, y: 20 }}
-  whileInView={{ opacity: 1, y: 0 }}
-  whileHover={{ scale: 1.05 }}
-  transition={{ duration: 0.4, ease: "easeOut" }}
-  viewport={{ once: true }}
-          className="relative overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm group"
-          style={{ aspectRatio: "4 / 3" }}
+          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4"
+          variants={stagger}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true }}
         >
-          <img
-            src={src}
-            alt={`Gallery ${i + 1}`}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-            loading="lazy"
-          />
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-        </motion.div>
-      ))}
-  </motion.div>
-
-  <div className="mt-10 text-center">
-    <a
-      href="/gallery"
-      className="inline-block rounded-xl bg-[var(--brand)] text-white px-8 py-3 text-lg font-semibold shadow-md hover:bg-[var(--brand-dark)] transition"
-    >
-      View full gallery →
-    </a>
-  </div>
-</Section>
-
-{/* ===== Modal: Feliks Video ===== */}
-      {/* ===== Modal: Feliks Video ===== */}
-    
-{showFeliks && (
-  <div
-    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4"
-    onClick={() => setShowFeliks(false)}
-    aria-modal="true"
-    role="dialog"
-  >
-    <div
-      className="relative w-full max-w-3xl rounded-2xl overflow-hidden bg-black shadow-2xl"
-      onClick={(e) => e.stopPropagation()}
-    >
-      {/* Close */}
-      <button
-        onClick={() => setShowFeliks(false)}
-        className="absolute right-3 top-3 z-10 rounded-full bg-white/90 px-3 py-1 text-sm font-medium shadow hover:bg-white"
-        aria-label="Close video"
-      >
-        Close
-      </button>
-
-      {/* Video */}
-      <div className="aspect-video">
-        <video
-          className="h-full w-full"
-          controls
-          preload="metadata"
-          poster="/images/people/feliks.jpg"
-        >
-          <source src="/videos/feliks.mp4" type="video/mp4" />
-          Your browser does not support the video tag.
-        </video>
-      </div>
-    </div>
-  </div>
-)}
-
-      {/* ===== Styled Support / Donate (заменить существующий блок) ===== */}
-<Section
-  id="support"
-  title="Support the Mission"
-  subtitle="Your generosity helps us bring hope, freedom, and restoration through the ministry of Church of God Exodus."
->
-  <div className="relative py-16">
-
-    {/* Decorative glows */}
-    <div className="absolute -top-12 -left-12 h-56 w-56 rounded-full bg-emerald-100/40 blur-3xl pointer-events-none" />
-    <div className="absolute -bottom-12 -right-20 h-72 w-72 rounded-full bg-indigo-100/40 blur-3xl pointer-events-none" />
-
-    <motion.div
-      className="relative mx-auto max-w-3xl rounded-3xl bg-white p-10 shadow-2xl ring-1 ring-gray-200 text-center"
-      variants={fadeInUp}
-      initial="hidden"
-      whileInView="show"
-      viewport={{ once: true, margin: "-80px" }}
-    >
-
-      {/* ✅ Текст теперь сверху */}
-      <h3 className="text-3xl font-bold text-slate-900 mb-3">
-        Give to Exodus Recovery
-      </h3>
-
-      <p className="text-slate-600 text-lg leading-relaxed mb-4">
-        Your gift supports our ministry and outreach to people seeking freedom and a new life in Christ.
-      </p>
-
-      <p className="text-sm text-slate-500 mb-10">
-        All donations are securely processed by Stripe.
-      </p>
-
-      {/* ----- TWO CARDS BELOW ----- */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-        {/* One-time donation */}
-        <div className="rounded-2xl border border-slate-100 p-6 bg-gradient-to-b from-white to-slate-50 shadow-md">
-          <div className="flex flex-col h-full items-center justify-between">
-            <div>
-              <div className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-[var(--brand)] text-white text-lg font-semibold mb-3">
-                $
-              </div>
-              <label className="text-sm text-slate-600 mb-2 block">One-time donation</label>
-            </div>
-
-            <div className="flex items-center gap-3 w-full mt-4">
-              <Input
-                value={oneTimeInput}
-                onChange={(e) => setOneTimeInput(e.target.value)}
-                placeholder="Amount (e.g. 25)"
-                aria-label="One time amount"
-                className="w-full"
-              />
-              <button
-                type="button"
-                onClick={handleDonateOnce}
-                className="whitespace-nowrap rounded-xl bg-[var(--brand)] text-white px-4 py-2 font-semibold shadow hover:bg-[var(--brand-dark)] transition"
+          {[
+            "/images/gallery/01.jpg",
+            "/images/gallery/02.jpg",
+            "/images/gallery/03.jpg",
+            "/images/gallery/04.jpg",
+            "/images/gallery/05.jpg",
+            "/images/gallery/06.jpg",
+            "/images/gallery/07.jpg",
+            "/images/gallery/08.jpg",
+            "/images/gallery/09.jpg",
+            "/images/gallery/10.jpg",
+            "/images/gallery/11.jpg",
+            "/images/gallery/12.jpg",
+            "/images/gallery/13.jpg",
+            "/images/gallery/14.jpg",
+            "/images/gallery/15.jpg",
+            "/images/gallery/16.jpg",
+            "/images/gallery/17.jpg",
+          ]
+            .slice(0, 8)
+            .map((src, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                whileHover={{ scale: 1.05 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+                viewport={{ once: true }}
+                className="relative overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm group"
+                style={{ aspectRatio: "4 / 3" }}
               >
-                Give
-              </button>
+                <img
+                  src={src}
+                  alt={`Gallery ${i + 1}`}
+                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  loading="lazy"
+                />
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              </motion.div>
+            ))}
+        </motion.div>
+
+        <div className="mt-10 text-center">
+          <a
+            href="/gallery"
+            className="inline-block rounded-xl bg-[var(--brand)] text-white px-8 py-3 text-lg font-semibold shadow-md hover:bg-[var(--brand-dark)] transition"
+          >
+            View full gallery →
+          </a>
+        </div>
+      </Section>
+
+      {/* Modal Feliks */}
+      {showFeliks && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4"
+          onClick={() => setShowFeliks(false)}
+          aria-modal="true"
+          role="dialog"
+        >
+          <div
+            className="relative w-full max-w-3xl rounded-2xl overflow-hidden bg-black shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setShowFeliks(false)}
+              className="absolute right-3 top-3 z-10 rounded-full bg-white/90 px-3 py-1 text-sm font-medium shadow hover:bg-white"
+              aria-label="Close video"
+            >
+              Close
+            </button>
+
+            <div className="aspect-video">
+              <video
+                className="h-full w-full"
+                controls
+                preload="metadata"
+                poster="/images/people/feliks.jpg"
+              >
+                <source src="/videos/feliks.mp4" type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
             </div>
           </div>
         </div>
+      )}
 
-        {/* Monthly donation */}
-        <div className="rounded-2xl border border-slate-100 p-6 bg-white shadow-md">
-          <div className="flex flex-col h-full items-center justify-between">
-            <div>
-              <div className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-[var(--accent)] text-white text-lg font-semibold mb-3">
-                ↻
+      {/* Support / Donate */}
+      <Section
+        id="support"
+        title="Support the Mission"
+        subtitle="Your generosity helps us bring hope, freedom, and restoration through the ministry of Church of God Exodus."
+      >
+        <div className="relative py-16">
+          <div className="absolute -top-12 -left-12 h-56 w-56 rounded-full bg-emerald-100/40 blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-12 -right-20 h-72 w-72 rounded-full bg-indigo-100/40 blur-3xl pointer-events-none" />
+
+          <motion.div
+            className="relative mx-auto max-w-3xl rounded-3xl bg-white p-10 shadow-2xl ring-1 ring-gray-200 text-center"
+            variants={fadeInUp}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: "-80px" }}
+          >
+            <h3 className="text-3xl font-bold text-slate-900 mb-3">
+              Give to Exodus Recovery
+            </h3>
+
+            <p className="text-slate-600 text-lg leading-relaxed mb-4">
+              Your gift supports our ministry and outreach to people seeking freedom and a new life in Christ.
+            </p>
+
+            <p className="text-sm text-slate-500 mb-10">
+              All donations are securely processed by Stripe.
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="rounded-2xl border border-slate-100 p-6 bg-gradient-to-b from-white to-slate-50 shadow-md">
+                <div className="flex flex-col h-full items-center justify-between">
+                  <div>
+                    <div className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-[var(--brand)] text-white text-lg font-semibold mb-3">
+                      $
+                    </div>
+                    <label className="text-sm text-slate-600 mb-2 block">One-time donation</label>
+                  </div>
+
+                  <div className="flex items-center gap-3 w-full mt-4">
+                    <Input
+                      value={oneTimeInput}
+                      onChange={(e) => setOneTimeInput(e.target.value)}
+                      placeholder="Amount (e.g. 25)"
+                      aria-label="One time amount"
+                      className="w-full"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleDonateOnce}
+                      className="whitespace-nowrap rounded-xl bg-[var(--brand)] text-white px-4 py-2 font-semibold shadow hover:bg-[var(--brand-dark)] transition"
+                    >
+                      Give
+                    </button>
+                  </div>
+                </div>
               </div>
-              <label className="text-sm text-slate-600 mb-2 block">Monthly support</label>
-            </div>
 
-            <div className="flex items-center gap-3 w-full mt-4">
-              <select
-  value={selectedPriceId}
-  onChange={(e) => setSelectedPriceId(e.target.value)}
-  className="px-3 py-2 rounded-xl border w-full"
->
-  <option value="price_1SQdWEBrWBoIIHjWnOeeyFNE">$25 / month</option>
-  <option value="price_1SQdWEBrWBoIIHjWpWfpPtzs">$50 / month</option>
-  <option value="price_1SQdWEBrWBoIIHjW4nXcPcBM">$100 / month</option>
-  <option value="price_1SQdWEBrWBoIIHjWnHMtdv84">$200 / month</option>
-  <option value="price_1SQdWEBrWBoIIHjWqHoNPT0i">$500 / month</option>
-</select>
+              <div className="rounded-2xl border border-slate-100 p-6 bg-white shadow-md">
+                <div className="flex flex-col h-full items-center justify-between">
+                  <div>
+                    <div className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-[var(--accent)] text-white text-lg font-semibold mb-3">
+                      ↻
+                    </div>
+                    <label className="text-sm text-slate-600 mb-2 block">Monthly support</label>
+                  </div>
 
-<button
-  type="button"
-  onClick={() => handleDonateMonthly(selectedPriceId)}
-  className="whitespace-nowrap rounded-xl bg-black text-white px-4 py-2 font-semibold shadow hover:bg-gray-800 transition"
->
-  Subscribe
-</button>
+                  <div className="flex items-center gap-3 w-full mt-4">
+                    <select
+                      value={selectedPriceId}
+                      onChange={(e) => setSelectedPriceId(e.target.value)}
+                      className="px-3 py-2 rounded-xl border w-full"
+                    >
+                      <option value="price_1SQdWEBrWBoIIHjWnOeeyFNE">$25 / month</option>
+                      <option value="price_1SQdWEBrWBoIIHjWpWfpPtzs">$50 / month</option>
+                      <option value="price_1SQdWEBrWBoIIHjW4nXcPcBM">$100 / month</option>
+                      <option value="price_1SQdWEBrWBoIIHjWnHMtdv84">$200 / month</option>
+                      <option value="price_1SQdWEBrWBoIIHjWqHoNPT0i">$500 / month</option>
+                    </select>
+
+                    <button
+                      type="button"
+                      onClick={() => handleDonateMonthly(selectedPriceId)}
+                      className="whitespace-nowrap rounded-xl bg-black text-white px-4 py-2 font-semibold shadow hover:bg-gray-800 transition"
+                    >
+                      Subscribe
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
+          </motion.div>
         </div>
-      </div>
-    </motion.div>
-  </div>
-</Section>
+      </Section>
 
       {/* Programs */}
-      <Section id="programs" title="Programs" subtitle="Multi-stage care tailored to your recovery journey.">
+      <Section
+        id="programs"
+        title="Programs"
+        subtitle="Multi-stage care tailored to your recovery journey."
+      >
         <div className="grid md:grid-cols-2 gap-6">
           <ProgramCard
             icon={Calendar}
@@ -916,7 +843,7 @@ const handleDonateMonthly = async (priceOrAmount: string | number) => {
         </div>
       </Section>
 
-      {/* IMPACT / STATS */}
+      {/* Impact */}
       <section
         aria-label="Impact and outcomes"
         className="py-10"
@@ -943,7 +870,11 @@ const handleDonateMonthly = async (priceOrAmount: string | number) => {
       </section>
 
       {/* How it works */}
-      <Section id="how" title="How It Works" subtitle="A clear, compassionate path from first contact to aftercare.">
+      <Section
+        id="how"
+        title="How It Works"
+        subtitle="A clear, compassionate path from first contact to aftercare."
+      >
         <div className="grid md:grid-cols-5 gap-6">
           {[
             { n: 1, t: "Reach Out", d: "Call or message us. We’ll listen without judgment and explain next steps." },
@@ -1067,83 +998,80 @@ const handleDonateMonthly = async (priceOrAmount: string | number) => {
 
       {/* Admissions */}
       <Section
-  id="admissions"
-  title="Admissions"
-  subtitle="A clear and compassionate path to get started."
->
-  <div className="grid md:grid-cols-3 gap-6">
-    {/* Step 1 */}
-    <Card className="rounded-2xl shadow-sm">
-      <CardHeader className="flex items-center gap-3">
-        <span
-          className="inline-flex h-12 w-12 items-center justify-center rounded-xl"
-          style={{ background: BRAND.colors.muted }}
-        >
-          <MessageCircle className="h-6 w-6" style={{ color: BRAND.colors.primary }} />
-        </span>
-        <CardTitle>Free Consultation</CardTitle>
-      </CardHeader>
-      <CardContent className="text-slate-700 space-y-2">
-        <p>
-          Call us or submit a form. We’ll help you choose inpatient or outpatient care and explain
-          every step in detail.
-        </p>
-      </CardContent>
-    </Card>
-
-    {/* Step 2 */}
-    <Card className="rounded-2xl shadow-sm">
-      <CardHeader className="flex items-center gap-3">
-        <span
-          className="inline-flex h-12 w-12 items-center justify-center rounded-xl"
-          style={{ background: BRAND.colors.muted }}
-        >
-          <ClipboardCheck className="h-6 w-6" style={{ color: BRAND.colors.primary }} />
-        </span>
-        <CardTitle>Assessment & Plan</CardTitle>
-      </CardHeader>
-      <CardContent className="text-slate-700 space-y-2">
-        <p>
-          A full clinical and spiritual assessment, goal-setting, treatment plan, and scheduling.
-        </p>
-      </CardContent>
-    </Card>
-
-    {/* Step 3 */}
-    <Card className="rounded-2xl shadow-sm">
-      <CardHeader className="flex items-center gap-3">
-        <span
-          className="inline-flex h-12 w-12 items-center justify-center rounded-xl"
-          style={{ background: BRAND.colors.muted }}
-        >
-          <HeartHandshake className="h-6 w-6" style={{ color: BRAND.colors.primary }} />
-        </span>
-        <CardTitle>Start Treatment</CardTitle>
-      </CardHeader>
-      <CardContent className="text-slate-700 space-y-2">
-        <p>
-          You begin your program with full support, community connection, and structured daily
-          guidance.
-        </p>
-      </CardContent>
-    </Card>
-  </div>
-
-  <div className="mt-8 text-slate-600">{BRAND.serviceArea}</div>
-
-  <div className="mt-4">
-    <a href="#contact">
-      <Button
-        className="rounded-xl px-6 text-base"
-        style={{ background: BRAND.colors.primary }}
+        id="admissions"
+        title="Admissions"
+        subtitle="A clear and compassionate path to get started."
       >
-        Start today
-      </Button>
-    </a>
-  </div>
-</Section>
+        <div className="grid md:grid-cols-3 gap-6">
+          <Card className="rounded-2xl shadow-sm">
+            <CardHeader className="flex items-center gap-3">
+              <span
+                className="inline-flex h-12 w-12 items-center justify-center rounded-xl"
+                style={{ background: BRAND.colors.muted }}
+              >
+                <MessageCircle className="h-6 w-6" style={{ color: BRAND.colors.primary }} />
+              </span>
+              <CardTitle>Free Consultation</CardTitle>
+            </CardHeader>
+            <CardContent className="text-slate-700 space-y-2">
+              <p>
+                Call us or submit a form. We’ll help you choose inpatient or outpatient care and explain
+                every step in detail.
+              </p>
+            </CardContent>
+          </Card>
 
-            {/* FAQ */}
+          <Card className="rounded-2xl shadow-sm">
+            <CardHeader className="flex items-center gap-3">
+              <span
+                className="inline-flex h-12 w-12 items-center justify-center rounded-xl"
+                style={{ background: BRAND.colors.muted }}
+              >
+                <ClipboardCheck className="h-6 w-6" style={{ color: BRAND.colors.primary }} />
+              </span>
+              <CardTitle>Assessment & Plan</CardTitle>
+            </CardHeader>
+            <CardContent className="text-slate-700 space-y-2">
+              <p>
+                A full clinical and spiritual assessment, goal-setting, treatment plan, and scheduling.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-2xl shadow-sm">
+            <CardHeader className="flex items-center gap-3">
+              <span
+                className="inline-flex h-12 w-12 items-center justify-center rounded-xl"
+                style={{ background: BRAND.colors.muted }}
+              >
+                <HeartHandshake className="h-6 w-6" style={{ color: BRAND.colors.primary }} />
+              </span>
+              <CardTitle>Start Treatment</CardTitle>
+            </CardHeader>
+            <CardContent className="text-slate-700 space-y-2">
+              <p>
+                You begin your program with full support, community connection, and structured daily
+                guidance.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="mt-8 text-slate-600">{BRAND.serviceArea}</div>
+
+        <div className="mt-4">
+          <a href="#contact">
+            <Button
+              className="rounded-xl px-6 text-base"
+              style={{ background: BRAND.colors.primary }}
+            >
+              Start today
+            </Button>
+          </a>
+        </div>
+      </Section>
+
+      {/* FAQ */}
       <Section
         id="faq"
         title="Frequently Asked Questions"
@@ -1191,7 +1119,6 @@ const handleDonateMonthly = async (priceOrAmount: string | number) => {
                 key={i}
                 className="rounded-2xl shadow-sm border border-slate-200 bg-white"
               >
-                {/* Кнопка-вопрос */}
                 <button
                   type="button"
                   onClick={() => setOpenFaq(isOpen ? null : i)}
@@ -1215,7 +1142,6 @@ const handleDonateMonthly = async (priceOrAmount: string | number) => {
                   </CardHeader>
                 </button>
 
-                {/* Ответ – показываем только если открыт */}
                 {isOpen && (
                   <CardContent className="pt-0 pb-4 px-6 text-slate-700 text-sm md:text-[15px] leading-relaxed">
                     {item.a}
@@ -1226,105 +1152,103 @@ const handleDonateMonthly = async (priceOrAmount: string | number) => {
           })}
         </div>
       </Section>
-      
+
       {/* Contact */}
-<Section id="contact" title="Contact">
-  <div className="grid md:grid-cols-2 gap-6 items-start">
-    {/* Left: Contact Form */}
-    <Card className="rounded-2xl shadow-sm">
-      <CardHeader>
-        <CardTitle>Contact us</CardTitle>
-      </CardHeader>
+      <Section id="contact" title="Contact">
+        <div className="grid md:grid-cols-2 gap-6 items-start">
+          <Card className="rounded-2xl shadow-sm">
+            <CardHeader>
+              <CardTitle>Contact us</CardTitle>
+            </CardHeader>
 
-      <CardContent className="grid gap-4">
-        {/* 💥 НАСТОЯЩАЯ РАБОЧАЯ ФОРМА */}
-        <ContactForm />
+            <CardContent className="grid gap-4">
+              <ContactForm />
+              <div className="text-sm text-slate-600">
+                or call{" "}
+                <a className="underline" href={`tel:${BRAND.phone}`}>
+                  {BRAND.phone}
+                </a>
+              </div>
+            </CardContent>
+          </Card>
 
-        <div className="text-sm text-slate-600">
-          or call{" "}
-          <a className="underline" href={`tel:${BRAND.phone}`}>
-            {BRAND.phone}
-          </a>
+          <Card className="rounded-2xl shadow-sm">
+            <CardHeader>
+              <CardTitle>Find us</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-slate-700">
+              <p className="flex items-center gap-2">
+                <MapPin className="h-5 w-5" /> {BRAND.address}
+              </p>
+              <p className="flex items-center gap-2">
+                <Phone className="h-5 w-5" />{" "}
+                <a className="underline" href={`tel:${BRAND.phone}`}>
+                  {BRAND.phone}
+                </a>
+              </p>
+              <p className="flex items-center gap-2">
+                <Mail className="h-5 w-5" />{" "}
+                <a className="underline" href={`mailto:${BRAND.email}`}>
+                  {BRAND.email}
+                </a>
+              </p>
+              <p className="text-sm">{BRAND.serviceArea}</p>
+            </CardContent>
+          </Card>
         </div>
-      </CardContent>
-    </Card>
+      </Section>
 
-    {/* Right: Find us */}
-    <Card className="rounded-2xl shadow-sm">
-      <CardHeader>
-        <CardTitle>Find us</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3 text-slate-700">
-        <p className="flex items-center gap-2">
-          <MapPin className="h-5 w-5" /> {BRAND.address}
-        </p>
-        <p className="flex items-center gap-2">
-          <Phone className="h-5 w-5" />{" "}
-          <a className="underline" href={`tel:${BRAND.phone}`}>
-            {BRAND.phone}
-          </a>
-        </p>
-        <p className="flex items-center gap-2">
-          <Mail className="h-5 w-5" />{" "}
-          <a className="underline" href={`mailto:${BRAND.email}`}>
-            {BRAND.email}
-          </a>
-        </p>
-        <p className="text-sm">{BRAND.serviceArea}</p>
-      </CardContent>
-    </Card>
-  </div>
-</Section>
+      {/* Footer */}
+      <footer className="mt-10 border-t border-slate-200">
+        <div className="max-w-6xl mx-auto px-4 py-10 grid md:grid-cols-3 gap-6 text-sm text-slate-600">
+          <div>
+            <div className="flex items-center gap-4">
+              <img
+                src="/logo-exodus.svg"
+                alt="Exodus Recovery"
+                className="h-20 md:h-28 w-auto"
+                style={{ display: "block" }}
+              />
+              <span className="font-semibold text-lg">{BRAND.name}</span>
+            </div>
 
-      {/** Footer */}
-<footer className="mt-10 border-t border-slate-200">
-  <div className="max-w-6xl mx-auto px-4 py-10 grid md:grid-cols-3 gap-6 text-sm text-slate-600">
-    <div>
-      <div className="flex items-center gap-4">
-        <img
-          src="/logo-exodus.svg"
-          alt="Exodus Recovery"
-          className="h-20 md:h-28 w-auto"
-          style={{ display: "block" }}
-        />
-        <span className="font-semibold text-lg">{BRAND.name}</span>
-      </div>
+            <p className="mt-3 text-slate-600">
+              Addiction is not the end of the story. With the right support, a new beginning is possible.
+            </p>
+          </div>
 
-      <p className="mt-3 text-slate-600">
-        Addiction is not the end of the story. With the right support, a new beginning is possible.
-      </p>
-    </div>
+          <div className="grid grid-cols-2 gap-6">
+            <div>
+              <p className="font-medium text-slate-800">Navigate</p>
+              <ul className="mt-2 space-y-2">
+                <li><a className="hover:opacity-70" href="#about">About</a></li>
+                <li><a className="hover:opacity-70" href="#programs">Programs</a></li>
+                <li><a className="hover:opacity-70" href="#approach">Approach</a></li>
+                <li><a className="hover:opacity-70" href="#admissions">Admissions</a></li>
+              </ul>
+            </div>
 
-    <div className="grid grid-cols-2 gap-6">
-      <div>
-        <p className="font-medium text-slate-800">Navigate</p>
-        <ul className="mt-2 space-y-2">
-          <li><a className="hover:opacity-70" href="#about">About</a></li>
-          <li><a className="hover:opacity-70" href="#programs">Programs</a></li>
-          <li><a className="hover:opacity-70" href="#approach">Approach</a></li>
-          <li><a className="hover:opacity-70" href="#admissions">Admissions</a></li>
-        </ul>
-      </div>
+            <div>
+              <p className="font-medium text-slate-800">Help</p>
+              <ul className="mt-2 space-y-2">
+                <li><a className="hover:opacity-70" href="#testimonials">Stories</a></li>
+                <li><a className="hover:opacity-70" href="#contact">Contact</a></li>
+              </ul>
+            </div>
+          </div>
 
-      <div>
-        <p className="font-medium text-slate-800">Help</p>
-        <ul className="mt-2 space-y-2">
-          <li><a className="hover:opacity-70" href="#testimonials">Stories</a></li>
-          <li><a className="hover:opacity-70" href="#contact">Contact</a></li>
-        </ul>
-      </div>
-    </div>
+          <div>
+            <p>
+              © {new Date().getFullYear()} {BRAND.name}. A faith-based 501(c)(3) nonprofit. All rights reserved.
+            </p>
+            <p className="mt-2">
+              *Disclaimer: This site does not provide medical advice. In emergencies call 911.
+            </p>
+          </div>
+        </div>
+      </footer>
 
-    <div>
-      <p>
-        © {new Date().getFullYear()} {BRAND.name}. A faith-based 501(c)(3) nonprofit. All rights reserved.
-      </p>
-      <p className="mt-2">*Disclaimer: This site does not provide medical advice. In emergencies call 911.</p>
-    </div>
-  </div>
-</footer>
-
-      {/* Плавающая кнопка звонка */}
+      {/* Floating call button */}
       <a href={`tel:${BRAND.phone}`} className="fixed right-4 bottom-4">
         <Button
           className="rounded-full h-14 w-14 shadow-lg"
