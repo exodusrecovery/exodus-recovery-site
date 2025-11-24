@@ -326,28 +326,54 @@ const [openFaq, setOpenFaq] = useState<number | null>(null);
       });
   }
 
-  const handleDonateOnce = () => {
-    const val = (oneTimeInput || "").toString().trim();
-    if (!val) { alert("Please enter an amount for one-time donation."); return; }
-    const cleaned = val.replace(/\$/g, "").replace(/,/g, "");
-    const num = Number(cleaned);
-    if (!Number.isFinite(num) || num <= 0) { alert("Enter a valid numeric amount."); return; }
-    const cents = Math.round(num * 100);
+  // === One-time donation (Give) ===
+const handleDonateOnce = async () => {
+  const val = (oneTimeInput || "").toString().trim();
 
-    openStripeInNewTab(() =>
-      createCheckoutSession({
-        mode: "payment",
-        amount: cents,
-      })
-    );
-  };
+  if (!val) {
+    alert("Please enter an amount for one-time donation.");
+    return;
+  }
 
-  const handleDonateMonthly = (priceOrAmount: string | number) => {
+  const cleaned = val.replace(/\$/g, "").replace(/,/g, "");
+  const num = Number(cleaned);
+
+  if (!Number.isFinite(num) || num <= 0) {
+    alert("Enter a valid numeric amount.");
+    return;
+  }
+
+  const cents = Math.round(num * 100);
+
+  try {
+    // Create checkout session on backend
+    const session = await createCheckoutSession({
+      mode: "payment",
+      amount: cents,
+    });
+
+    // Redirect in SAME tab (fixes the blank window issue)
+    if (session && session.url) {
+      window.location.href = session.url;
+    } else {
+      alert("Could not start payment. Please try again.");
+    }
+  } catch (error) {
+    console.error(error);
+    alert("Something went wrong while starting payment.");
+  }
+};
+
+
+// === Monthly donation (Subscribe) ===
+const handleDonateMonthly = async (priceOrAmount: string | number) => {
   let resolvedPriceId: string | undefined;
 
+  // If passed directly a Stripe price_ id
   if (typeof priceOrAmount === "string" && priceOrAmount.startsWith("price_")) {
     resolvedPriceId = priceOrAmount;
   } else {
+    // If passed an amount like 25 / 50 / 100...
     const amt = typeof priceOrAmount === "string" ? Number(priceOrAmount) : priceOrAmount;
 
     switch (amt) {
@@ -371,6 +397,30 @@ const [openFaq, setOpenFaq] = useState<number | null>(null);
         return;
     }
   }
+
+  if (!resolvedPriceId) {
+    alert("No price selected");
+    return;
+  }
+
+  try {
+    // Create subscription checkout session on backend
+    const session = await createCheckoutSession({
+      mode: "subscription",
+      priceId: resolvedPriceId,
+    });
+
+    // Redirect in SAME tab (fixes blank popup)
+    if (session && session.url) {
+      window.location.href = session.url;
+    } else {
+      alert("Could not start subscription. Please try again.");
+    }
+  } catch (error) {
+    console.error(error);
+    alert("Something went wrong while starting subscription.");
+  }
+};
 
   if (!resolvedPriceId) {
     alert("Price ID not configured");
