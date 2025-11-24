@@ -341,53 +341,55 @@ export default function RehabWebsite() {
   };
 
   // Ежемесячная подписка
-  const handleDonateMonthly = async (priceOrAmount: string | number) => {
-    let resolvedPriceId: string | undefined;
+  // Ежемесячная подписка
+const handleDonateMonthly = async (priceOrAmount: string | number) => {
+  let resolvedPriceId: string | undefined;
 
-    if (typeof priceOrAmount === "string" && priceOrAmount.startsWith("price_")) {
-      resolvedPriceId = priceOrAmount;
-    } else {
-      const amt = typeof priceOrAmount === "string" ? Number(priceOrAmount) : priceOrAmount;
+  if (typeof priceOrAmount === "string" && priceOrAmount.startsWith("price_")) {
+    resolvedPriceId = priceOrAmount;
+  } else {
+    const amt = typeof priceOrAmount === "string" ? Number(priceOrAmount) : priceOrAmount;
 
-      switch (amt) {
-        case 25:
-          resolvedPriceId = import.meta.env.VITE_STRIPE_PRICE_25;
-          break;
-        case 50:
-          resolvedPriceId = import.meta.env.VITE_STRIPE_PRICE_50;
-          break;
-        case 100:
-          resolvedPriceId = import.meta.env.VITE_STRIPE_PRICE_100;
-          break;
-        case 200:
-          resolvedPriceId = import.meta.env.VITE_STRIPE_PRICE_200;
-          break;
-        case 500:
-          resolvedPriceId = import.meta.env.VITE_STRIPE_PRICE_500;
-          break;
-        default:
-          alert("No price selected");
-          return;
-      }
+    switch (amt) {
+      case 25:
+        resolvedPriceId = import.meta.env.VITE_STRIPE_PRICE_25;
+        break;
+      case 50:
+        resolvedPriceId = import.meta.env.VITE_STRIPE_PRICE_50;
+        break;
+      case 100:
+        resolvedPriceId = import.meta.env.VITE_STRIPE_PRICE_100;
+        break;
+      case 200:
+        resolvedPriceId = import.meta.env.VITE_STRIPE_PRICE_200;
+        break;
+      case 500:
+        resolvedPriceId = import.meta.env.VITE_STRIPE_PRICE_500;
+        break;
+      default:
+        alert("No price selected");
+        return;
     }
+  }
 
-    if (!resolvedPriceId) {
-      alert("No price selected");
-      return;
-    }
+  if (!resolvedPriceId) {
+    alert("No price selected");
+    return;
+  }
 
-    try {
-      const url = await createCheckoutSession({
-        mode: "subscription",
-        priceId: resolvedPriceId,
-      });
+  try {
+    const url = await createCheckoutSession({
+      mode: "subscription",
+      // 🔥 ВАЖНО: имя поля именно price_id
+      price_id: resolvedPriceId,
+    });
 
-      window.location.href = url;
-    } catch (error: any) {
-      console.error(error);
-      alert(error?.message || "Something went wrong while starting subscription.");
-    }
-  };
+    window.location.href = url;
+  } catch (error: any) {
+    console.error(error);
+    alert(error?.message || "Something went wrong while starting subscription.");
+  }
+};
 
   // ------------------------- END helpers -------------------------
 
