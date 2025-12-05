@@ -276,7 +276,239 @@ const ProgramCard = ({ icon: Icon, title, points }: any) => (
     </form>
   );
 }
+type TestimonyPhoto = {
+  src: string;
+  caption: string;
+};
 
+function TestimonySliderCard(props: {
+  name: string;
+  role: string;
+  shortQuote: string;
+  photos: TestimonyPhoto[];
+  fullTestimony: string;
+}) {
+  const { name, role, shortQuote, photos, fullTestimony } = props;
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [open, setOpen] = useState(false);
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+
+  // авто-смена фото в карточке
+  React.useEffect(() => {
+    if (!photos || photos.length === 0) return;
+    const id = window.setInterval(() => {
+      setActiveIndex((prev) => (prev + 1) % photos.length);
+    }, 4000);
+    return () => window.clearInterval(id);
+  }, [photos]);
+
+  if (!photos || photos.length === 0) return null;
+
+  const current = photos[activeIndex];
+
+  const handlePrev = () => {
+    setActiveIndex((prev) => (prev - 1 + photos.length) % photos.length);
+  };
+
+  const handleNext = () => {
+    setActiveIndex((prev) => (prev + 1) % photos.length);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStartX(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX == null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (dx > 50) handlePrev();
+    else if (dx < -50) handleNext();
+    setTouchStartX(null);
+  };
+
+  const handleShare = async () => {
+    const url = window.location.origin + "#stories";
+    const text = `${name}'s testimony from Exodus Recovery`;
+
+    try {
+      if ((navigator as any).share) {
+        await (navigator as any).share({
+          title: `${name} – Exodus Recovery`,
+          text,
+          url,
+        });
+      } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(url);
+        alert("Link copied to clipboard.");
+      } else {
+        alert(url);
+      }
+    } catch (e) {
+      // пользователь мог просто закрыть share-диалог
+      console.warn("Share cancelled or failed", e);
+    }
+  };
+
+  return (
+    <>
+      {/* Карточка с авто-слайдером */}
+      <motion.div
+        variants={fadeInUp}
+        whileHover={{ y: -4, scale: 1.01 }}
+        transition={{ type: "spring", stiffness: 250, damping: 20 }}
+        className="relative overflow-hidden rounded-2xl shadow-lg group cursor-pointer"
+        onClick={() => setOpen(true)}
+        role="button"
+        aria-label={`Open testimony of ${name}`}
+      >
+        <div
+  className="relative h-80 w-full bg-gray-100"
+  onTouchStart={handleTouchStart}
+  onTouchEnd={handleTouchEnd}
+>
+  <motion.img
+    key={activeIndex}
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    transition={{ duration: 0.4 }}
+    src={current.src}
+    alt={name}
+    className="absolute inset-0 h-full w-full object-cover"
+    loading="lazy"
+  />
+</div>
+
+        {/* Бейдж про слайдер */}
+        <div className="absolute left-3 top-3">
+          <span className="inline-flex items-center gap-2 rounded-full bg-black/60 text-white text-xs md:text-sm px-3 py-1.5 backdrop-blur">
+            <span className="inline-block h-2 w-2 rounded-full bg-emerald-400" />
+            Swipe of her journey
+          </span>
+        </div>
+
+        {/* Градиент + текст */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
+          <p className="text-lg font-semibold">{name}</p>
+          <p className="text-xs text-white/80">{role}</p>
+          <p className="mt-2 text-sm leading-snug">“{shortQuote}”</p>
+          <p className="mt-1 text-[11px] text-white/70">{current.caption}</p>
+        </div>
+      </motion.div>
+
+      {/* Модалка со свидетельством и галереей */}
+      {open && (
+        <div
+          className="fixed inset-0 z-[110] flex items-center justify-center bg-black/70 p-4"
+          onClick={() => setOpen(false)}
+          aria-modal="true"
+          role="dialog"
+        >
+          <div
+            className="relative w-full max-w-2xl rounded-2xl bg-white shadow-2xl max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Закрыть */}
+            <button
+              onClick={() => setOpen(false)}
+              className="absolute right-3 top-3 z-10 rounded-full bg-slate-100 px-3 py-1 text-xs font-medium shadow hover:bg-slate-200"
+              aria-label="Close testimony"
+            >
+              Close
+            </button>
+
+            <div className="p-6 md:p-8">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-xl font-semibold text-slate-900">{name}</h3>
+                  <p className="text-sm text-slate-500 mt-1">{role}</p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleShare}
+                  className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-100"
+                >
+                  Share testimony
+                </button>
+              </div>
+
+              {/* Галерея в модалке */}
+              <div className="mt-4">
+                <div
+                  className="relative w-full aspect-[4/3] overflow-hidden rounded-xl bg-slate-100"
+                  onTouchStart={handleTouchStart}
+                  onTouchEnd={handleTouchEnd}
+                >
+                  <motion.img
+                    key={activeIndex}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.4 }}
+                    src={photos[activeIndex].src}
+                    alt={`${name} ${activeIndex + 1}`}
+                    className="h-full w-full object-cover"
+                    loading="lazy"
+                  />
+
+                  {/* Кнопки влево/вправо */}
+                  {photos.length > 1 && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={handlePrev}
+                        className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/50 text-white px-2 py-1 text-xs md:text-sm hover:bg-black/70"
+                      >
+                        ‹
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleNext}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/50 text-white px-2 py-1 text-xs md:text-sm hover:bg-black/70"
+                      >
+                        ›
+                      </button>
+                    </>
+                  )}
+                </div>
+
+                {/* подпись к текущему фото */}
+                <p className="mt-2 text-xs text-slate-500 text-center">
+                  {photos[activeIndex].caption}
+                </p>
+
+                {/* точки-индикаторы */}
+                {photos.length > 1 && (
+                  <div className="mt-2 flex justify-center gap-2">
+                    {photos.map((_, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setActiveIndex(idx)}
+                        className={
+                          "h-2 w-2 rounded-full transition " +
+                          (idx === activeIndex
+                            ? "bg-slate-800"
+                            : "bg-slate-300 hover:bg-slate-400")
+                        }
+                        aria-label={`Show photo ${idx + 1}`}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Текст свидетельства */}
+              <div className="mt-5 text-sm md:text-[15px] leading-relaxed text-slate-700 whitespace-pre-line">
+                {fullTestimony}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
 export default function RehabWebsite() {
   // ------------------------- State & Stripe helpers -------------------------
   const [oneTimeInput, setOneTimeInput] = useState<string>("");
@@ -525,7 +757,7 @@ const handleDonateMonthly = async (priceOrAmount: string | number) => {
         </div>
       </section>
 
-      {/* Stories */}
+            {/* Stories */}
       <Section
         id="stories"
         title="Real People. Real Change."
@@ -538,70 +770,103 @@ const handleDonateMonthly = async (priceOrAmount: string | number) => {
           whileInView="show"
           viewport={{ once: true }}
         >
-          {[
-            {
-              name: "Feliks Galkin",
-              role: "Free for 10 years • Graduate • Mentor",
-              quote:
-                "God gave me freedom and a new life. Today I am 10 years clean and helping others find the same hope.",
-              img: "/images/people/feliks.jpg",
-            },
-            {
-              name: "Jessica Steinacker",
-              role: "Graduate • 8 year sober",
-              quote:
-                "For years I searched for something to fill the emptiness inside. Addiction only broke me further. At Exodus Recovery, I met Jesus — He gave me true freedom, hope, and purpose.",
-              img: "/images/people/jessica.jpg",
-            },
-            {
-              name: "Andrey Andriyak",
-              role: "Graduate • 2 years sober",
-              quote:
-                "For 15 years I struggled with addiction. At Exodus Recovery I finally found freedom, true friends, and a new family. God gave me purpose and a calling to help others find the same freedom.",
-              img: "/images/people/andrey.jpg",
-            },
-          ].map((p, i) => (
-            <motion.div
-              key={i}
-              variants={fadeInUp}
-              whileHover={{ y: -4, scale: 1.01 }}
-              transition={{ type: "spring", stiffness: 250, damping: 20 }}
-              className={`relative overflow-hidden rounded-2xl shadow-lg group ${
-                p.name === "Feliks Galkin" ? "cursor-pointer" : ""
-              }`}
-              onClick={() => {
-                if (p.name === "Feliks Galkin") setShowFeliks(true);
-              }}
-              role={p.name === "Feliks Galkin" ? "button" : undefined}
-              aria-label={p.name === "Feliks Galkin" ? "Play Feliks video testimony" : undefined}
-            >
-              <img
-                src={p.img}
-                alt={p.name}
-                className="h-80 w-full object-contain bg-gray-100 transition-transform duration-500 group-hover:scale-[1.03]"
-                loading="lazy"
-              />
-              {p.name === "Feliks Galkin" && (
-                <div className="absolute left-3 top-3">
-                  <span className="inline-flex items-center gap-2 rounded-full bg-black/60 text-white text-xs md:text-sm px-3 py-1.5 backdrop-blur">
-                    <span className="inline-block h-2 w-2 rounded-full bg-emerald-400" />
-                    Click to watch
-                  </span>
-                </div>
-              )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
-                <p className="text-lg font-semibold">{p.name}</p>
-                <p className="text-xs text-white/80">{p.role}</p>
-                <p className="mt-2 text-sm leading-snug">“{p.quote}”</p>
-              </div>
-            </motion.div>
-          ))}
+          {/* Feliks – как было, с видео */}
+          <motion.div
+            variants={fadeInUp}
+            whileHover={{ y: -4, scale: 1.01 }}
+            transition={{ type: "spring", stiffness: 250, damping: 20 }}
+            className="relative overflow-hidden rounded-2xl shadow-lg group cursor-pointer"
+            onClick={() => setShowFeliks(true)}
+            role="button"
+            aria-label="Play Feliks video testimony"
+          >
+            <img
+              src="/images/people/feliks.jpg"
+              alt="Feliks Galkin"
+              className="h-80 w-full object-contain bg-gray-100 transition-transform duration-500 group-hover:scale-[1.03]"
+              loading="lazy"
+            />
+            <div className="absolute left-3 top-3">
+              <span className="inline-flex items-center gap-2 rounded-full bg-black/60 text-white text-xs md:text-sm px-3 py-1.5 backdrop-blur">
+                <span className="inline-block h-2 w-2 rounded-full bg-emerald-400" />
+                Click to watch
+              </span>
+            </div>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
+              <p className="text-lg font-semibold">Feliks Galkin</p>
+              <p className="text-xs text-white/80">Free for 10 years • Graduate • Mentor</p>
+              <p className="mt-2 text-sm leading-snug">
+                “God gave me freedom and a new life. Today I am 10 years clean and helping others find the same hope.”
+              </p>
+            </div>
+          </motion.div>
+
+                    {/* Dahlia – НОВЫЙ СЛАЙДЕР */}
+          <TestimonySliderCard
+            name="Dahlia Alkhodary"
+            role="Graduate • 5 years sober"
+            shortQuote="Exodus Recovery didn’t just help me get clean — it helped me become a new person in Christ."
+            photos={[
+              {
+                src: "/images/people/dahlia/1.jpg",
+                caption: "Years of addiction left me broken and trying to escape from myself.",
+              },
+              {
+                src: "/images/people/dahlia/2.jpg",
+                caption: "At Exodus Recovery I found hope, structure, and the strength to get clean.",
+              },
+              {
+                src: "/images/people/dahlia/3.jpg",
+                caption: "Today I am free, a wife, a mother, and helping others find hope.",
+              },
+            ]}
+            fullTestimony={`My name is Dahlia Alkhodary, and I am a recovered addict. I began using at the age of 13, and for almost 10 years I was trapped in addiction. It started with something “small” — weed — but it never stopped there. As cliché as it sounds, it truly was a gateway drug that led me to pills, and eventually to heroin, cocaine, and meth.
+
+I used anything I could get my hands on. It didn’t matter what it was, as long as it helped me escape reality. I was a broken kid who hated existing and tried to run from myself every day. Eventually I found myself addicted to hard drugs, suffering withdrawals, and feeling like getting clean was impossible.
+
+During that time I was introduced to Exodus Recovery. But it took me years to finally embrace change. I kept leaving and coming back — for almost five years. Then I left again, this time with a boyfriend who later became my husband. Soon after, I found out I was three months pregnant while still in addiction.
+
+You would think that finding out I was pregnant would make me stop immediately — but addiction had such a grip on me that I kept using, even though I tried to quit on my own. It became impossible. Eventually both my boyfriend (now husband) and I decided to get help. We separated to go to different rehabs, and I returned to Exodus Recovery.
+
+There, God gave me freedom. Today I have 5 years clean.
+
+They say you must choose recovery for yourself, but I believe God sometimes sends miracles — like my son — to give us the push we need when we no longer believe we are worth saving. My son was born completely healthy. My husband and I got married, and now we help people who struggle with what we once did.
+
+In the beginning of my story, I said I am a recoverED addict — not recovering. All glory to God, and my deep gratitude to Exodus Recovery, a faith-based program that teaches people not only how to get clean, but how to become new creations in Christ.`}
+          />
+
+          {/* Andrey – как было */}
+          <motion.div
+            variants={fadeInUp}
+            whileHover={{ y: -4, scale: 1.01 }}
+            transition={{ type: "spring", stiffness: 250, damping: 20 }}
+            className="relative overflow-hidden rounded-2xl shadow-lg group"
+          >
+            <img
+              src="/images/people/andrey.jpg"
+              alt="Andrey Andriyak"
+              className="h-80 w-full object-contain bg-gray-100 transition-transform duration-500 group-hover:scale-[1.03]"
+              loading="lazy"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
+              <p className="text-lg font-semibold">Andrey Andriyak</p>
+              <p className="text-xs text-white/80">Graduate • 2 years sober</p>
+              <p className="mt-2 text-sm leading-snug">
+                “For 15 years I struggled with addiction. At Exodus Recovery I finally found freedom, true friends,
+                and a new family. God gave me purpose and a calling to help others find the same freedom.”
+              </p>
+            </div>
+          </motion.div>
         </motion.div>
 
         <div className="mt-8">
           <Link to="/videos">
-            <Button className="rounded-xl px-6 text-base" style={{ background: BRAND.colors.accent }}>
+            <Button
+              className="rounded-xl px-6 text-base"
+              style={{ background: BRAND.colors.accent }}
+            >
               Watch video testimonies
             </Button>
           </Link>
